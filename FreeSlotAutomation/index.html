@@ -1,11 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schedule Board — Free Slot Finder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #131b24;
+    --panel: #1c2733;
+    --panel-raised: #223040;
+    --hairline: #2e3d4d;
+    --amber: #e8a33d;
+    --amber-dim: #a97a34;
+    --teal: #52d6c4;
+    --teal-dim: #2f7a70;
+    --text: #eef1ec;
+    --text-muted: #8fa0ad;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top, #1a2530 0%, var(--bg) 55%);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding:32px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:28px;
+    padding-bottom:18px;
+    border-bottom:1px solid var(--hairline);
+    flex-wrap:wrap;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.18em;
+    color:var(--teal);
+    text-transform:uppercase;
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Oswald',sans-serif;
+    font-weight:700;
+    font-size:clamp(28px,5vw,40px);
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    margin:0;
+    color:var(--text);
+  }
+  .clock{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-muted);
+    text-align:right;
+  }
+  .clock strong{color:var(--amber);font-size:15px;display:block;letter-spacing:.05em;}
+
+  .daytabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:24px;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+  .daytab{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    padding:10px 14px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .15s ease;
+    flex-shrink:0;
+  }
+  .daytab:hover{border-color:var(--amber-dim);color:var(--text);}
+  .daytab.active{
+    background:var(--amber);
+    border-color:var(--amber);
+    color:#1a1305;
+    font-weight:600;
+  }
+
+  .board{
+    background:var(--panel);
+    border:1px solid var(--hairline);
+    position:relative;
+  }
+  .board::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;
+    height:3px;
+    background:linear-gradient(90deg,var(--amber),var(--teal));
+  }
+
+  .summary{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 20px;
+    border-bottom:1px solid var(--hairline);
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .summary-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+  }
+  .summary-value{
+    font-family:'Oswald',sans-serif;
+    font-size:22px;
+    color:var(--teal);
+    font-weight:600;
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns:120px 1fr auto;
+    align-items:center;
+    gap:14px;
+    padding:14px 20px;
+    border-bottom:1px solid var(--hairline);
+    transition:background .5s ease;
+  }
+  .row:last-child{border-bottom:none;}
+  .row.flip-in{animation:flipIn .35s ease both;}
+  @keyframes flipIn{
+    from{opacity:0;transform:rotateX(-90deg);}
+    to{opacity:1;transform:rotateX(0deg);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .row.flip-in{animation:none;}
+  }
+
+  .row-time{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--text-muted);
+    letter-spacing:.02em;
+  }
+  .row-info{min-width:0;}
+  .row-title{
+    font-family:'Oswald',sans-serif;
+    font-size:16px;
+    letter-spacing:.01em;
+    margin:0 0 2px;
+    text-transform:uppercase;
+  }
+  .row.busy .row-title{color:var(--text);}
+  .row.free .row-title{color:var(--teal);}
+  .row-sub{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11.5px;
+    color:var(--text-muted);
+  }
+  .tag{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10px;
+    letter-spacing:.1em;
+    padding:4px 9px;
+    border:1px solid;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .row.busy .tag{color:var(--amber);border-color:var(--amber-dim);}
+  .row.free .tag{color:var(--teal);border-color:var(--teal-dim);}
+
+  .empty-day{
+    padding:40px 20px;
+    text-align:center;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+  }
+  .empty-day strong{color:var(--teal);display:block;font-family:'Oswald',sans-serif;font-size:20px;margin-bottom:6px;text-transform:uppercase;}
+
+  footer{
+    margin-top:24px;
+    text-align:center;
+    color:var(--text-muted);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:11px;
+    letter-spacing:.04em;
+  }
+</style>
 </head>
 <body>
-    
+<div class="wrap">
+
+  <header>
+    <div>
+      <p class="brand-eyebrow">BT-CSE-SPZ &middot; SEC B5</p>
+      <h1>Schedule Board</h1>
+    </div>
+    <div class="clock">
+      <span>Window shown</span>
+      <strong id="windowLabel">9:00 AM – 6:00 PM</strong>
+    </div>
+  </header>
+
+  <div class="daytabs" id="dayTabs"></div>
+
+  <div class="board">
+    <div class="summary">
+      <span class="summary-label" id="dayLabel">MONDAY</span>
+      <span class="summary-value" id="freeTotal">— free today</span>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <footer>Timetable repeats weekly &middot; edit SCHEDULE in the code to update classes</footer>
+</div>
+
+<script>
+// ---- Weekly recurring timetable (confirmed repeating pattern) ----
+const SCHEDULE = {
+  Monday: [
+    {start:"15:00", end:"15:55", title:"Formal Languages and Automata Theory", room:"2103"}
+  ],
+  Tuesday: [
+    {start:"09:00", end:"09:55", title:"Formal Languages and Automata Theory", room:"4103"},
+    {start:"10:00", end:"10:55", title:"Backend Development", room:"9206"},
+    {start:"14:00", end:"14:55", title:"Object Oriented Analysis and Design", room:"4104"},
+    {start:"16:00", end:"16:55", title:"Research Methodology in CS", room:"4103"}
+  ],
+  Wednesday: [
+    {start:"09:00", end:"09:55", title:"Cryptography and Network Security", room:"4104"},
+    {start:"15:00", end:"15:55", title:"Formal Languages and Automata Theory", room:"4103"},
+    {start:"16:00", end:"16:55", title:"Research Methodology in CS", room:"4104"},
+    {start:"17:00", end:"17:55", title:"Object Oriented Analysis and Design", room:"4103"}
+  ],
+  Thursday: [
+    {start:"14:00", end:"14:55", title:"Backend Development", room:"10205"},
+    {start:"16:00", end:"16:55", title:"EDGE — Advance Communication", room:"9108"},
+    {start:"17:00", end:"17:55", title:"Probability, Entropy, and MC Simulation", room:"4103"}
+  ],
+  Friday: [
+    {start:"13:00", end:"13:55", title:"Backend Development", room:"3002"},
+    {start:"15:00", end:"15:55", title:"Cryptography and Network Security", room:"4104"},
+    {start:"16:00", end:"16:55", title:"Research Methodology in CS", room:"4104"},
+    {start:"17:00", end:"17:55", title:"Probability, Entropy, and MC Simulation", room:"4103"}
+  ],
+  Saturday: [
+    {start:"10:00", end:"10:55", title:"Probability, Entropy, and MC Simulation", room:"4103"},
+    {start:"12:00", end:"13:55", title:"Backend Development", room:"IT 201"},
+    {start:"15:00", end:"15:55", title:"Cryptography and Network Security", room:"4103"},
+    {start:"16:00", end:"16:55", title:"Object Oriented Analysis and Design", room:"4102"},
+    {start:"17:00", end:"17:55", title:"Backend Development", room:"4102"}
+  ],
+  Sunday: []
+};
+
+const DAY_START = "09:00";
+const DAY_END   = "18:00";
+const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+
+function toMin(t){
+  const [h,m] = t.split(":").map(Number);
+  return h*60+m;
+}
+function toTime(mins){
+  let h = Math.floor(mins/60);
+  const m = (mins%60).toString().padStart(2,"0");
+  const period = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if(h === 0) h = 12;
+  return h+":"+m+" "+period;
+}
+function fmtDur(mins){
+  const h = Math.floor(mins/60), m = mins%60;
+  if(h && m) return h+"h "+m+"m";
+  if(h) return h+"h";
+  return m+"m";
+}
+
+function buildTimeline(day){
+  const classes = [...(SCHEDULE[day]||[])].sort((a,b)=>toMin(a.start)-toMin(b.start));
+  const dayStart = toMin(DAY_START), dayEnd = toMin(DAY_END);
+  const items = [];
+  let cursor = dayStart;
+
+  for(const c of classes){
+    const cs = toMin(c.start), ce = toMin(c.end);
+    if(cs > cursor){
+      items.push({type:"free", start:cursor, end:cs});
+    }
+    items.push({type:"busy", start:cs, end:ce, title:c.title, room:c.room});
+    cursor = Math.max(cursor, ce);
+  }
+  if(cursor < dayEnd){
+    items.push({type:"free", start:cursor, end:dayEnd});
+  }
+  return items;
+}
+
+function totalFreeMinutes(day){
+  return buildTimeline(day)
+    .filter(i=>i.type==="free")
+    .reduce((sum,i)=>sum+(i.end-i.start),0);
+}
+
+function render(day){
+  document.getElementById("dayLabel").textContent = day.toUpperCase();
+  const freeMin = totalFreeMinutes(day);
+  document.getElementById("freeTotal").textContent = fmtDur(freeMin) + " free today";
+
+  const rowsEl = document.getElementById("rows");
+  rowsEl.innerHTML = "";
+
+  const timeline = buildTimeline(day);
+  const hasAnything = timeline.length > 0;
+
+  if(!hasAnything){
+    rowsEl.innerHTML = `<div class="empty-day"><strong>Fully Open</strong>No classes scheduled — the whole window is free.</div>`;
+    return;
+  }
+
+  timeline.forEach((item, idx)=>{
+    const row = document.createElement("div");
+    row.className = "row flip-in " + item.type;
+    row.style.animationDelay = (idx*40)+"ms";
+
+    const dur = fmtDur(item.end-item.start);
+    if(item.type==="busy"){
+      row.innerHTML = `
+        <div class="row-time">${toTime(item.start)}–${toTime(item.end)}</div>
+        <div class="row-info">
+          <p class="row-title">${item.title}</p>
+          <p class="row-sub">Room ${item.room} &middot; ${dur}</p>
+        </div>
+        <span class="tag">Class</span>`;
+    } else {
+      row.innerHTML = `
+        <div class="row-time">${toTime(item.start)}–${toTime(item.end)}</div>
+        <div class="row-info">
+          <p class="row-title">Free</p>
+          <p class="row-sub">${dur} available</p>
+        </div>
+        <span class="tag">Open</span>`;
+    }
+    rowsEl.appendChild(row);
+  });
+}
+
+function todayName(){
+  const idx = new Date().getDay(); // 0=Sun
+  return DAYS[(idx+6)%7]; // shift so Monday=0
+}
+
+function init(){
+  const tabsEl = document.getElementById("dayTabs");
+  const initialDay = todayName();
+
+  DAYS.forEach(day=>{
+    const btn = document.createElement("button");
+    btn.className = "daytab" + (day===initialDay ? " active" : "");
+    btn.textContent = day.slice(0,3);
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".daytab").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      render(day);
+    });
+    tabsEl.appendChild(btn);
+  });
+
+  render(initialDay);
+}
+
+init();
+</script>
 </body>
 </html>
