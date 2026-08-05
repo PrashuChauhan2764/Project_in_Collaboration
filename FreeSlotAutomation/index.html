@@ -183,6 +183,72 @@
   .row.busy .tag{color:var(--amber);border-color:var(--amber-dim);}
   .row.free .tag{color:var(--teal);border-color:var(--teal-dim);}
 
+  .row.free{cursor:pointer;}
+  .row.free:hover{background:rgba(82,214,196,0.06);}
+  .row.free .chevron{
+    display:inline-block;
+    margin-left:8px;
+    transition:transform .2s ease;
+    color:var(--text-muted);
+    font-size:10px;
+  }
+  .row.free.open .chevron{transform:rotate(90deg);color:var(--teal);}
+
+  .room-panel{
+    display:none;
+    background:#161f28;
+    border-bottom:1px solid var(--hairline);
+    padding:6px 20px 16px 20px;
+  }
+  .room-panel.open{display:block;}
+  .room-panel-note{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:10.5px;
+    color:var(--text-muted);
+    margin:8px 0 12px;
+    padding:8px 10px;
+    border:1px dashed var(--hairline);
+    line-height:1.5;
+  }
+  .room-panel-note strong{color:var(--amber);}
+  .room-block{
+    margin-bottom:10px;
+  }
+  .room-block:last-child{margin-bottom:0;}
+  .room-block-name{
+    font-family:'Oswald',sans-serif;
+    font-size:13px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--text-muted);
+    margin:0 0 4px;
+  }
+  .room-seg{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    padding:6px 10px;
+    margin-bottom:3px;
+    border-left:2px solid;
+  }
+  .room-seg.free{
+    border-color:var(--teal);
+    color:var(--teal);
+    background:rgba(82,214,196,0.06);
+  }
+  .room-seg.occupied{
+    border-color:var(--amber-dim);
+    color:var(--text-muted);
+    background:rgba(232,163,61,0.04);
+  }
+  .room-seg .seg-tag{
+    font-size:9.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
   .empty-day{
     padding:40px 20px;
     text-align:center;
@@ -272,6 +338,20 @@ const DAY_START = "09:00";
 const DAY_END   = "18:00";
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
+// Rooms we know about (pulled from your own class schedule above).
+const ROOM_LIST = Array.from(
+  new Set(Object.values(SCHEDULE).flat().map(c => c.room))
+).sort();
+
+// Once you share the room-booking data for OTHER sections/classes,
+// paste it in here in this shape and the room panel will use it automatically:
+//
+// const EXTRA_ROOM_BOOKINGS = {
+//   "4104": { Tuesday: [ {start:"11:00", end:"11:55"} ] },
+//   "4103": { Monday:  [ {start:"09:00", end:"09:55"} ] }
+// };
+const EXTRA_ROOM_BOOKINGS = {};
+
 function toMin(t){
   const [h,m] = t.split(":").map(Number);
   return h*60+m;
@@ -311,6 +391,34 @@ function buildTimeline(day){
   return items;
 }
 
+function getRoomBusyIntervals(room, day){
+  // Known bookings: your own classes held in this room, plus any
+  // extra bookings you've added for other sections/batches.
+  const own = (SCHEDULE[day]||[])
+    .filter(c => c.room === room)
+    .map(c => ({start: toMin(c.start), end: toMin(c.end)}));
+  const extra = ((EXTRA_ROOM_BOOKINGS[room]||{})[day] || [])
+    .map(b => ({start: toMin(b.start), end: toMin(b.end)}));
+  return [...own, ...extra].sort((a,b)=>a.start-b.start);
+}
+
+function computeRoomSegments(room, day, gapStart, gapEnd){
+  const busy = getRoomBusyIntervals(room, day)
+    .map(b => ({start: Math.max(b.start, gapStart), end: Math.min(b.end, gapEnd)}))
+    .filter(b => b.start < b.end)
+    .sort((a,b)=>a.start-b.start);
+
+  const segments = [];
+  let cursor = gapStart;
+  for(const b of busy){
+    if(b.start > cursor) segments.push({type:"free", start:cursor, end:b.start});
+    segments.push({type:"occupied", start:b.start, end:b.end});
+    cursor = Math.max(cursor, b.end);
+  }
+  if(cursor < gapEnd) segments.push({type:"free", start:cursor, end:gapEnd});
+  return segments;
+}
+
 function totalFreeMinutes(day){
   return buildTimeline(day)
     .filter(i=>i.type==="free")
@@ -347,17 +455,58 @@ function render(day){
           <p class="row-sub">Room ${item.room} &middot; ${dur}</p>
         </div>
         <span class="tag">Class</span>`;
+      rowsEl.appendChild(row);
     } else {
       row.innerHTML = `
         <div class="row-time">${toTime(item.start)}–${toTime(item.end)}</div>
         <div class="row-info">
-          <p class="row-title">Free</p>
-          <p class="row-sub">${dur} available</p>
+          <p class="row-title">Free <span class="chevron">▶</span></p>
+          <p class="row-sub">${dur} available &middot; tap to see open rooms</p>
         </div>
         <span class="tag">Open</span>`;
+      rowsEl.appendChild(row);
+
+      const panel = document.createElement("div");
+      panel.className = "room-panel";
+      panel.innerHTML = buildRoomPanelHTML(day, item.start, item.end);
+      rowsEl.appendChild(panel);
+
+      row.addEventListener("click", ()=>{
+        row.classList.toggle("open");
+        panel.classList.toggle("open");
+      });
     }
-    rowsEl.appendChild(row);
   });
+}
+
+function buildRoomPanelHTML(day, gapStart, gapEnd){
+  const noExtraData = Object.keys(EXTRA_ROOM_BOOKINGS).length === 0;
+
+  const note = `<p class="room-panel-note"><strong>Note:</strong> this only reflects rooms from ${
+    "your own timetable"
+  }. ${noExtraData ? "Share the full room-booking data (other sections/batches) and it'll plug in here for accurate results." : "Includes the extra room-booking data you've added."}</p>`;
+
+  if(ROOM_LIST.length === 0){
+    return note + `<p class="room-panel-note">No known rooms yet.</p>`;
+  }
+
+  const blocks = ROOM_LIST.map(room=>{
+    const segs = computeRoomSegments(room, day, gapStart, gapEnd);
+    const segHTML = segs.map(s=>{
+      const dur = fmtDur(s.end-s.start);
+      if(s.type==="free"){
+        return `<div class="room-seg free"><span>${toTime(s.start)}–${toTime(s.end)}</span><span class="seg-tag">Free &middot; ${dur}</span></div>`;
+      } else {
+        return `<div class="room-seg occupied"><span>${toTime(s.start)}–${toTime(s.end)}</span><span class="seg-tag">Occupied &middot; ${dur}</span></div>`;
+      }
+    }).join("");
+    return `<div class="room-block">
+      <p class="room-block-name">Room ${room}</p>
+      ${segHTML}
+    </div>`;
+  }).join("");
+
+  return note + blocks;
 }
 
 function todayName(){
