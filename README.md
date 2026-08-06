@@ -31,6 +31,7 @@ This repo cotain the very first of our collaborative project.
 # Version5:
 - pink color to differenciate
 - remove extra labels under scedhule upload sections keep only pdf names
+- try to deploy
 
 
 #  Future Features ideas:
