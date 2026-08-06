@@ -108,7 +108,9 @@
   .row:last-child{border-bottom:none;}
   @media (prefers-reduced-motion: reduce){.row{animation:none;}}
 
-  .row-time{font-size:13px;font-weight:600;color:var(--text-tertiary);letter-spacing:-0.01em;}
+  .row-time{font-size:13px;font-weight:600;letter-spacing:-0.01em;}
+  .row.busy .row-time{color:rgba(255,159,10,0.8);}
+  .row.free .row-time{color:#ffb3c6;}
   .row-info{min-width:0;}
   .row-title{font-size:15.5px;font-weight:600;margin:0 0 2px;letter-spacing:-0.01em;display:flex;align-items:center;}
   .row.busy .row-title{color:var(--text-primary);}
@@ -227,13 +229,10 @@
     <div class="compare-grid">
       <div class="upload-card" id="cardA">
         <div class="upload-card-header"><span class="upload-dot dot-a"></span><span class="upload-card-title">Schedule A</span></div>
-        <div class="upload-status" id="statusA">Loaded from your timetable &middot; <span id="countA">0</span> classes</div>
+        <div class="upload-status" id="statusA">Your Timetable</div>
         <div class="upload-actions">
           <label class="upload-btn">Upload PDF<input type="file" accept="application/pdf" id="fileA" hidden></label>
-          <button class="upload-btn ghost" id="pasteToggleA">Paste text instead</button>
         </div>
-        <textarea class="paste-area" id="pasteA" placeholder="Paste timetable text here..."></textarea>
-        <button class="upload-btn primary" id="parseBtnA" style="display:none;">Parse pasted text</button>
         <button class="upload-btn ghost" id="previewToggleA" style="display:none;margin-top:8px;">Show parsed classes</button>
         <div class="preview-list" id="previewA"></div>
       </div>
@@ -243,10 +242,7 @@
         <div class="upload-status empty" id="statusB">No timetable loaded yet</div>
         <div class="upload-actions">
           <label class="upload-btn">Upload PDF<input type="file" accept="application/pdf" id="fileB" hidden></label>
-          <button class="upload-btn ghost" id="pasteToggleB">Paste text instead</button>
         </div>
-        <textarea class="paste-area" id="pasteB" placeholder="Paste timetable text here..."></textarea>
-        <button class="upload-btn primary" id="parseBtnB" style="display:none;">Parse pasted text</button>
         <button class="upload-btn ghost" id="previewToggleB" style="display:none;margin-top:8px;">Show parsed classes</button>
         <div class="preview-list" id="previewB"></div>
       </div>
@@ -376,7 +372,9 @@ function render(day){
   document.getElementById("dayLabel").textContent = day.toUpperCase();
   document.getElementById("freeTotal").textContent = fmtDur(totalFreeMinutes(day)) + " free today";
   const rowsEl = document.getElementById("rows"); rowsEl.innerHTML = "";
-  const timeline = buildTimeline(day).filter(it => it.type !== "free" || (it.end - it.start) >= MIN_FREE_MINUTES);
+  const timeline = buildTimeline(day)
+    .map(it => it.type === "free" ? {...it, start: snapFreeStart(it.start), end: snapFreeEnd(it.end)} : it)
+    .filter(it => it.type !== "free" || (it.end - it.start) >= MIN_FREE_MINUTES);
   if(timeline.length === 0){
     rowsEl.innerHTML = '<div class="empty-day"><strong>Fully Open</strong>No classes scheduled today.</div>';
     return;
@@ -633,9 +631,6 @@ function buildPreviewHTML(schedule){
 
 function setupUploadCard(slot){
   const fileInput = document.getElementById("file"+slot);
-  const pasteToggle = document.getElementById("pasteToggle"+slot);
-  const pasteArea = document.getElementById("paste"+slot);
-  const parseBtn = document.getElementById("parseBtn"+slot);
   const statusEl = document.getElementById("status"+slot);
   const previewToggle = document.getElementById("previewToggle"+slot);
   const previewEl = document.getElementById("preview"+slot);
@@ -645,17 +640,17 @@ function setupUploadCard(slot){
     previewToggle.textContent = previewEl.classList.contains("open") ? "Hide parsed classes" : "Show parsed classes";
   });
 
-  function setResult(schedule, count, sourceLabel){
+  function setResult(schedule, count, label){
     if(slot==="A") compareA = {schedule, count}; else compareB = {schedule, count};
     if(count === 0){
       statusEl.className = "upload-status error";
-      statusEl.textContent = "Couldn't find recognizable classes — try pasting plain text instead.";
+      statusEl.textContent = "Couldn't parse that PDF";
       previewToggle.style.display = "none";
       previewEl.classList.remove("open");
       if(slot==="A") compareA = null; else compareB = null;
     } else {
       statusEl.className = "upload-status";
-      statusEl.textContent = sourceLabel + " · " + count + " classes found";
+      statusEl.textContent = label;
       previewToggle.style.display = "inline-block";
       previewEl.innerHTML = buildPreviewHTML(schedule);
     }
@@ -670,36 +665,15 @@ function setupUploadCard(slot){
     try{
       const {text, items} = await extractPdfData(file);
       let {schedule, count} = parseTimetableText(text);
-      let label = "Parsed from " + file.name;
       if(count === 0){
         const grid = parseGridLayout(items);
-        if(grid.count > 0){ schedule = grid.schedule; count = grid.count; label = "Parsed (grid layout) from " + file.name; }
+        if(grid.count > 0){ schedule = grid.schedule; count = grid.count; }
       }
-      if(count === 0){
-        pasteArea.value = text.trim();
-        pasteArea.classList.add("open");
-        parseBtn.style.display = "block";
-        statusEl.className = "upload-status error";
-        statusEl.textContent = "Couldn't auto-parse " + file.name + " — raw text dropped in below, edit if needed then hit Parse.";
-      } else {
-        setResult(schedule, count, label);
-      }
+      setResult(schedule, count, file.name);
     }catch(err){
       statusEl.className = "upload-status error";
-      statusEl.textContent = "Couldn't read that PDF. Try pasting the text instead.";
+      statusEl.textContent = "Couldn't read that PDF.";
     }
-  });
-
-  pasteToggle.addEventListener("click", ()=>{
-    pasteArea.classList.toggle("open");
-    parseBtn.style.display = pasteArea.classList.contains("open") ? "block" : "none";
-  });
-
-  parseBtn.addEventListener("click", ()=>{
-    const text = pasteArea.value.trim();
-    if(!text) return;
-    const {schedule, count} = parseTimetableText(text);
-    setResult(schedule, count, "Parsed from pasted text");
   });
 }
 
@@ -732,7 +706,6 @@ function init(){
     });
   });
 
-  document.getElementById("countA").textContent = compareA.count;
   document.getElementById("previewToggleA").style.display = "inline-block";
   document.getElementById("previewA").innerHTML = buildPreviewHTML(compareA.schedule);
   setupUploadCard("A");
