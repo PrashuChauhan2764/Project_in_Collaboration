@@ -183,6 +183,15 @@
     border:1px dashed var(--border-strong);border-radius:18px;
   }
 
+  .preview-list{display:none;margin-top:10px;max-height:260px;overflow-y:auto;border-top:1px solid var(--border);padding-top:10px;}
+  .preview-list.open{display:block;}
+  .preview-day{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-tertiary);margin:10px 0 5px;}
+  .preview-day:first-child{margin-top:0;}
+  .preview-item{display:flex;justify-content:space-between;gap:8px;font-size:12px;padding:5px 0;color:var(--text-secondary);border-bottom:1px solid rgba(255,255,255,0.04);}
+  .preview-item .pv-time{color:var(--text-tertiary);flex-shrink:0;font-weight:600;}
+  .preview-item .pv-title{flex:1;color:var(--text-primary);}
+  .preview-item .pv-room{color:var(--text-tertiary);flex-shrink:0;}
+
   footer{margin-top:30px;text-align:center;color:var(--text-tertiary);font-size:11.5px;font-weight:500;letter-spacing:.02em;}
 </style>
 </head>
@@ -225,6 +234,8 @@
         </div>
         <textarea class="paste-area" id="pasteA" placeholder="Paste timetable text here..."></textarea>
         <button class="upload-btn primary" id="parseBtnA" style="display:none;">Parse pasted text</button>
+        <button class="upload-btn ghost" id="previewToggleA" style="display:none;margin-top:8px;">Show parsed classes</button>
+        <div class="preview-list" id="previewA"></div>
       </div>
 
       <div class="upload-card" id="cardB">
@@ -236,6 +247,8 @@
         </div>
         <textarea class="paste-area" id="pasteB" placeholder="Paste timetable text here..."></textarea>
         <button class="upload-btn primary" id="parseBtnB" style="display:none;">Parse pasted text</button>
+        <button class="upload-btn ghost" id="previewToggleB" style="display:none;margin-top:8px;">Show parsed classes</button>
+        <div class="preview-list" id="previewB"></div>
       </div>
     </div>
 
@@ -298,6 +311,7 @@ const SCHEDULE = {
 
 const DAY_START = "09:00";
 const DAY_END   = "18:00";
+const MIN_FREE_MINUTES = 15;
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
 const ROOM_LIST = Array.from(new Set(Object.values(SCHEDULE).flat().map(c => c.room))).sort();
@@ -362,7 +376,7 @@ function render(day){
   document.getElementById("dayLabel").textContent = day.toUpperCase();
   document.getElementById("freeTotal").textContent = fmtDur(totalFreeMinutes(day)) + " free today";
   const rowsEl = document.getElementById("rows"); rowsEl.innerHTML = "";
-  const timeline = buildTimeline(day);
+  const timeline = buildTimeline(day).filter(it => it.type !== "free" || (it.end - it.start) >= MIN_FREE_MINUTES);
   if(timeline.length === 0){
     rowsEl.innerHTML = '<div class="empty-day"><strong>Fully Open</strong>No classes scheduled today.</div>';
     return;
@@ -522,8 +536,7 @@ function parseGridLayout(items){
     const col = nearestCol(cur.x);
     const hour = nearestRowHour(cur.y);
     const startH = hour.toString().padStart(2,"0");
-    const endH = (hour+1).toString().padStart(2,"0");
-    schedule[col.day].push({start:startH+":00", end:endH+":55", title:cur.str, room});
+    schedule[col.day].push({start:startH+":00", end:startH+":55", title:cur.str, room});
     count++;
   }
   return {schedule, count};
@@ -542,11 +555,16 @@ function intersectFree(A,B){
   }
   return result;
 }
+function snapFreeStart(m){ const rem = m % 60; return rem >= 50 ? m + (60 - rem) : m; }
+function snapFreeEnd(m){ const rem = m % 60; return (rem > 0 && rem <= 10) ? m - rem : m; }
+
 function commonFreeSlots(day){
   if(!compareA || !compareB) return [];
   const freeA = buildTimelineFor(compareA.schedule, day).filter(i=>i.type==="free").map(i=>({start:i.start,end:i.end}));
   const freeB = buildTimelineFor(compareB.schedule, day).filter(i=>i.type==="free").map(i=>({start:i.start,end:i.end}));
-  return intersectFree(freeA, freeB);
+  return intersectFree(freeA, freeB)
+    .map(s => ({start: snapFreeStart(s.start), end: snapFreeEnd(s.end)}))
+    .filter(s => (s.end - s.start) >= MIN_FREE_MINUTES);
 }
 
 function renderCompare(day){
@@ -600,22 +618,46 @@ function setupCompareDayTabs(){
   renderCompare(initial);
 }
 
+function buildPreviewHTML(schedule){
+  let html = "";
+  DAYS.forEach(day=>{
+    const classes = [...(schedule[day]||[])].sort((a,b)=>toMin(a.start)-toMin(b.start));
+    if(classes.length===0) return;
+    html += '<div class="preview-day">'+day+'</div>';
+    classes.forEach(c=>{
+      html += '<div class="preview-item"><span class="pv-time">'+toTime(toMin(c.start))+'–'+toTime(toMin(c.end))+'</span><span class="pv-title">'+c.title+'</span><span class="pv-room">Rm '+c.room+'</span></div>';
+    });
+  });
+  return html || '<div class="preview-item">No classes parsed.</div>';
+}
+
 function setupUploadCard(slot){
   const fileInput = document.getElementById("file"+slot);
   const pasteToggle = document.getElementById("pasteToggle"+slot);
   const pasteArea = document.getElementById("paste"+slot);
   const parseBtn = document.getElementById("parseBtn"+slot);
   const statusEl = document.getElementById("status"+slot);
+  const previewToggle = document.getElementById("previewToggle"+slot);
+  const previewEl = document.getElementById("preview"+slot);
+
+  previewToggle.addEventListener("click", ()=>{
+    previewEl.classList.toggle("open");
+    previewToggle.textContent = previewEl.classList.contains("open") ? "Hide parsed classes" : "Show parsed classes";
+  });
 
   function setResult(schedule, count, sourceLabel){
     if(slot==="A") compareA = {schedule, count}; else compareB = {schedule, count};
     if(count === 0){
       statusEl.className = "upload-status error";
       statusEl.textContent = "Couldn't find recognizable classes — try pasting plain text instead.";
+      previewToggle.style.display = "none";
+      previewEl.classList.remove("open");
       if(slot==="A") compareA = null; else compareB = null;
     } else {
       statusEl.className = "upload-status";
       statusEl.textContent = sourceLabel + " · " + count + " classes found";
+      previewToggle.style.display = "inline-block";
+      previewEl.innerHTML = buildPreviewHTML(schedule);
     }
     refreshCompareUI();
   }
@@ -691,6 +733,8 @@ function init(){
   });
 
   document.getElementById("countA").textContent = compareA.count;
+  document.getElementById("previewToggleA").style.display = "inline-block";
+  document.getElementById("previewA").innerHTML = buildPreviewHTML(compareA.schedule);
   setupUploadCard("A");
   setupUploadCard("B");
   refreshCompareUI();
