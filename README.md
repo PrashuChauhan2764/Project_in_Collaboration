@@ -10,13 +10,27 @@ This repo cotain the very first of our collaborative project.
 
 ### Track Project
 
-1. version1 contains:
+# version1:
 - 12 hr format clock
 - total free time
 - select today by default
 - room no
 - days navigation
 
+# version2:
+1. free rooms dropdown
+
+# version3:
+- premium design
+- compare schedule feature
+- file upload option
+
+# version4:
+- more accurate common free slots
+
+# Version5:
+- pink color to differenciate
+- remove extra labels under scedhule upload sections keep only pdf names
 
 
 #  Future Features ideas:
