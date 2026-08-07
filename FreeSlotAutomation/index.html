@@ -184,6 +184,51 @@
     text-align:center;padding:50px 24px;color:var(--text-tertiary);font-size:13.5px;
     border:1px dashed var(--border-strong);border-radius:18px;
   }
+  .compare-toolbar-center{display:flex;justify-content:center;margin:2px 0 26px;}
+  .compare-toolbar-center .upload-btn{width:auto;padding:11px 22px;font-size:13.5px;}
+
+  #printOverlay{display:none;position:fixed;inset:0;background:#1b1f26;z-index:200;overflow-y:auto;}
+  #printOverlay.open{display:block;}
+  .print-overlay-bar{
+    position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:center;
+    gap:10px;padding:14px 16px;background:#0d1117;border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .print-overlay-bar .hint{font-size:11.5px;color:var(--text-tertiary);margin-left:6px;}
+  .print-overlay-bar button{
+    font-family:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:9px 16px;cursor:pointer;border:1px solid var(--border-strong);
+  }
+  #printNowBtn{background:var(--blue);border-color:var(--blue);color:#fff;}
+  #printNowBtn:hover{background:#2b95ff;}
+  #closePrintOverlay{background:transparent;color:var(--text-secondary);}
+  #closePrintOverlay:hover{color:var(--text-primary);}
+
+  #printArea{width:min(760px,94%);margin:28px auto 60px;background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,0.5);}
+
+  @media print{
+    body > *:not(#printOverlay){display:none !important;}
+    .print-overlay-bar{display:none !important;}
+    #printOverlay{position:static;background:none;overflow:visible;}
+    #printArea{width:100%;margin:0;box-shadow:none;border-radius:0;}
+    @page{margin:14mm;}
+  }
+  .print-header{background:#0d1421;color:#fff;padding:20px 24px;}
+  .print-header h1{font-size:24px;font-weight:800;margin:0 0 6px;letter-spacing:-0.02em;}
+  .print-header p{font-size:11.5px;color:#b8c2d4;margin:0 0 10px;}
+  .print-legend{font-size:10.5px;color:#dfe6f0;}
+  .print-legend .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
+  .print-legend .dot.blue{background:#0A84FF;}
+  .print-legend .dot.purple{background:#BF5AF2;margin-left:14px;}
+  #printBody{padding:20px 24px;}
+  .print-day h2{font-size:15px;font-weight:700;color:#151b26;margin:16px 0 8px;padding-left:9px;border-left:3px solid #0A84FF;}
+  .print-day:first-child h2{margin-top:0;}
+  .print-empty{font-size:11.5px;color:#9aa3b0;font-style:italic;margin:0 0 6px;padding-left:9px;}
+  .print-slots{border:1px solid #e6e8ec;border-radius:8px;overflow:hidden;}
+  .print-slot-row{display:flex;justify-content:space-between;padding:8px 12px;font-size:12px;border-bottom:1px solid #eef0f3;}
+  .print-slot-row:last-child{border-bottom:none;}
+  .print-slot-row:nth-child(even){background:#f6f7f9;}
+  .print-slot-row .print-time{font-weight:700;color:#1a1f28;}
+  .print-slot-row .print-dur{color:#1f9d55;font-weight:600;}
+  .print-footer{padding:14px 24px;border-top:1px solid #e6e8ec;font-size:9.5px;color:#9aa3b0;}
 
   .preview-list{display:none;margin-top:10px;max-height:260px;overflow-y:auto;border-top:1px solid var(--border);padding-top:10px;}
   .preview-list.open{display:block;}
@@ -248,6 +293,10 @@
       </div>
     </div>
 
+    <div class="compare-toolbar-center" id="downloadWrap" style="display:none;">
+      <button class="upload-btn primary" id="downloadPdfBtn">&#8681; Download PDF</button>
+    </div>
+
     <div id="compareResults" style="display:none;">
       <div class="daytabs" id="compareDayTabs"></div>
       <div class="board">
@@ -264,7 +313,25 @@
   <footer>Timetable repeats weekly &middot; parsing runs entirely in your browser — nothing is uploaded anywhere</footer>
 </div>
 
+<div id="printOverlay">
+  <div class="print-overlay-bar">
+    <button id="printNowBtn">&#128438; Print / Save as PDF</button>
+    <button id="closePrintOverlay">Close</button>
+    <span class="hint">Choose "Save as PDF" as the destination</span>
+  </div>
+  <div id="printArea">
+    <div class="print-header">
+      <h1>Shared Free Time</h1>
+      <p>Common free slots across both schedules &middot; Generated <span id="printDate"></span></p>
+      <div class="print-legend"><span class="dot blue"></span>Schedule A<span class="dot purple"></span>Schedule B</div>
+    </div>
+    <div id="printBody"></div>
+    <div class="print-footer">Free Time — auto-generated schedule comparison</div>
+  </div>
+</div>
+
 <script>
+
 pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
 /* ---------- Base weekly timetable (yours) ---------- */
@@ -589,13 +656,16 @@ function renderCompare(day){
 function refreshCompareUI(){
   const resultsEl = document.getElementById("compareResults");
   const placeholderEl = document.getElementById("comparePlaceholder");
+  const downloadWrap = document.getElementById("downloadWrap");
   if(compareA && compareB){
     resultsEl.style.display = "block";
     placeholderEl.style.display = "none";
+    downloadWrap.style.display = "flex";
     setupCompareDayTabs();
   } else {
     resultsEl.style.display = "none";
     placeholderEl.style.display = "block";
+    downloadWrap.style.display = "none";
   }
 }
 function setupCompareDayTabs(){
@@ -677,6 +747,43 @@ function setupUploadCard(slot){
   });
 }
 
+/* ---------- PDF export (native browser print → Save as PDF) ---------- */
+function buildPrintArea(){
+  document.getElementById("printDate").textContent =
+    new Date().toLocaleDateString(undefined,{weekday:'long', year:'numeric', month:'long', day:'numeric'});
+
+  const bodyEl = document.getElementById("printBody");
+  bodyEl.innerHTML = "";
+
+  DAYS.forEach(day=>{
+    const slots = commonFreeSlots(day);
+    const dayDiv = document.createElement("div");
+    dayDiv.className = "print-day";
+
+    let html = "<h2>" + day + "</h2>";
+    if(slots.length === 0){
+      html += '<p class="print-empty">No shared free time</p>';
+    } else {
+      html += '<div class="print-slots">';
+      slots.forEach(s=>{
+        html += '<div class="print-slot-row"><span class="print-time">' +
+          toTime(s.start) + " – " + toTime(s.end) +
+          '</span><span class="print-dur">' + fmtDur(s.end - s.start) + ' free</span></div>';
+      });
+      html += "</div>";
+    }
+    dayDiv.innerHTML = html;
+    bodyEl.appendChild(dayDiv);
+  });
+}
+
+function downloadComparePDF(){
+  if(!compareA || !compareB) return;
+  buildPrintArea();
+  document.getElementById("printOverlay").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
 /* ---------- Init ---------- */
 function init(){
   const tabsEl = document.getElementById("dayTabs");
@@ -708,6 +815,12 @@ function init(){
 
   document.getElementById("previewToggleA").style.display = "inline-block";
   document.getElementById("previewA").innerHTML = buildPreviewHTML(compareA.schedule);
+  document.getElementById("downloadPdfBtn").addEventListener("click", downloadComparePDF);
+  document.getElementById("printNowBtn").addEventListener("click", ()=>{ window.print(); });
+  document.getElementById("closePrintOverlay").addEventListener("click", ()=>{
+    document.getElementById("printOverlay").classList.remove("open");
+    document.body.style.overflow = "";
+  });
   setupUploadCard("A");
   setupUploadCard("B");
   refreshCompareUI();
