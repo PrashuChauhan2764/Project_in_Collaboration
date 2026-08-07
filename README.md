@@ -33,6 +33,10 @@ This repo cotain the very first of our collaborative project.
 - remove extra labels under scedhule upload sections keep only pdf names
 - try to deploy
 
+# Versin6:
+- added pdf download option without functioning
+- save button without functioning
+
 
 #  Future Features ideas:
 by claude----
