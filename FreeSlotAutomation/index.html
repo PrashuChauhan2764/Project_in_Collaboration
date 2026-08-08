@@ -52,6 +52,13 @@
   }
   .sub{font-size:15px;color:var(--text-secondary);margin:0;font-weight:400;}
 
+  .schedule-upload-bar{
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+    background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    padding:12px 16px;margin-bottom:16px;
+  }
+  .schedule-upload-info{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--text-secondary);}
+
   /* Segmented control */
   .segmented{
     position:relative;display:flex;width:min(340px,100%);margin:28px auto 30px;
@@ -110,7 +117,7 @@
 
   .row-time{font-size:13px;font-weight:600;letter-spacing:-0.01em;}
   .row.busy .row-time{color:rgba(255,159,10,0.8);}
-  .row.free .row-time{color:#ffb3c6;}
+  .row.free .row-time{color:#A5D6A7;}
   .row-info{min-width:0;}
   .row-title{font-size:15.5px;font-weight:600;margin:0 0 2px;letter-spacing:-0.01em;display:flex;align-items:center;}
   .row.busy .row-title{color:var(--text-primary);}
@@ -260,6 +267,13 @@
 
   <!-- ===== Schedule view ===== -->
   <section id="scheduleView" class="view active">
+    <div class="schedule-upload-bar">
+      <div class="schedule-upload-info">
+        <span class="upload-dot dot-a"></span>
+        <span id="scheduleSourceLabel">Your Timetable (default)</span>
+      </div>
+      <label class="upload-btn">Upload your PDF<input type="file" accept="application/pdf" id="scheduleFileInput" hidden></label>
+    </div>
     <div class="daytabs" id="dayTabs"></div>
     <div class="board">
       <div class="summary">
@@ -378,10 +392,24 @@ const DAY_END   = "18:00";
 const MIN_FREE_MINUTES = 15;
 const DAYS = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
 
-const ROOM_LIST = Array.from(new Set(Object.values(SCHEDULE).flat().map(c => c.room))).sort();
-// Add other sections' room bookings here once you share them:
-// const EXTRA_ROOM_BOOKINGS = { "4104": { Tuesday: [ {start:"11:00", end:"11:55"} ] } };
-const EXTRA_ROOM_BOOKINGS = {};
+// The schedule currently powering the "Schedule" tab. Starts as the default
+// timetable above, but anyone can upload their own PDF to replace it.
+let activeSchedule = JSON.parse(JSON.stringify(SCHEDULE));
+
+// Sample placeholder room-booking data — replace with real data once you have it.
+// Shape: { "RoomName": { DayName: [ {start:"HH:MM", end:"HH:MM"} ] } }
+const EXTRA_ROOM_BOOKINGS = {
+  "9109": { Monday: [{start:"10:00", end:"10:55"}], Wednesday: [{start:"13:00", end:"13:55"}] },
+  "4110": { Tuesday: [{start:"09:00", end:"09:55"}], Thursday: [{start:"15:00", end:"15:55"}] },
+  "IT 105": { Monday: [{start:"14:00", end:"14:55"}], Friday: [{start:"11:00", end:"11:55"}] },
+  "2201": { Wednesday: [{start:"10:00", end:"10:55"}], Saturday: [{start:"09:00", end:"09:55"}] }
+};
+
+function getRoomList(){
+  const fromSchedule = Object.values(activeSchedule).flat().map(c => c.room);
+  const fromExtra = Object.keys(EXTRA_ROOM_BOOKINGS);
+  return Array.from(new Set([...fromSchedule, ...fromExtra])).sort();
+}
 
 /* ---------- Time helpers ---------- */
 function toMin(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
@@ -410,14 +438,14 @@ function buildTimelineFor(schedule, day){
   if(cursor < dayEnd) items.push({type:"free", start:cursor, end:dayEnd});
   return items;
 }
-function buildTimeline(day){ return buildTimelineFor(SCHEDULE, day); }
+function buildTimeline(day){ return buildTimelineFor(activeSchedule, day); }
 function totalFreeMinutes(day){
   return buildTimeline(day).filter(i=>i.type==="free").reduce((s,i)=>s+(i.end-i.start),0);
 }
 
 /* ---------- Room availability (schedule view) ---------- */
 function getRoomBusyIntervals(room, day){
-  const own = (SCHEDULE[day]||[]).filter(c => c.room === room).map(c => ({start: toMin(c.start), end: toMin(c.end)}));
+  const own = (activeSchedule[day]||[]).filter(c => c.room === room).map(c => ({start: toMin(c.start), end: toMin(c.end)}));
   const extra = ((EXTRA_ROOM_BOOKINGS[room]||{})[day] || []).map(b => ({start: toMin(b.start), end: toMin(b.end)}));
   return [...own, ...extra].sort((a,b)=>a.start-b.start);
 }
@@ -471,11 +499,10 @@ function render(day){
   });
 }
 function buildRoomPanelHTML(day, gapStart, gapEnd){
-  const noExtraData = Object.keys(EXTRA_ROOM_BOOKINGS).length === 0;
-  const note = '<p class="room-note"><strong>Note:</strong> only reflects rooms from your own timetable. '+
-    (noExtraData ? "Share full room-booking data and it'll plug in here." : "Includes the extra data you've added.")+'</p>';
-  if(ROOM_LIST.length === 0) return note + '<p class="room-note">No known rooms yet.</p>';
-  const blocks = ROOM_LIST.map(room=>{
+  const roomList = getRoomList();
+  const note = '<p class="room-note"><strong>Note:</strong> room availability includes sample placeholder data for a few rooms — swap in real bookings whenever you have them.</p>';
+  if(roomList.length === 0) return note + '<p class="room-note">No known rooms yet.</p>';
+  const blocks = roomList.map(room=>{
     const segs = computeRoomSegments(room, day, gapStart, gapEnd);
     const segHTML = segs.map(s=>{
       const dur = fmtDur(s.end-s.start);
@@ -789,6 +816,7 @@ function downloadComparePDF(){
 function init(){
   const tabsEl = document.getElementById("dayTabs");
   const initialDay = todayName();
+  let selectedDay = initialDay;
   DAYS.forEach(day=>{
     const btn = document.createElement("button");
     btn.className = "daytab" + (day===initialDay ? " active" : "");
@@ -796,11 +824,37 @@ function init(){
     btn.addEventListener("click", ()=>{
       document.querySelectorAll("#dayTabs .daytab").forEach(b=>b.classList.remove("active"));
       btn.classList.add("active");
+      selectedDay = day;
       render(day);
     });
     tabsEl.appendChild(btn);
   });
   render(initialDay);
+
+  const scheduleFileInput = document.getElementById("scheduleFileInput");
+  const scheduleSourceLabel = document.getElementById("scheduleSourceLabel");
+  scheduleFileInput.addEventListener("change", async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    scheduleSourceLabel.textContent = "Reading PDF...";
+    try{
+      const {text, items} = await extractPdfData(file);
+      let {schedule, count} = parseTimetableText(text);
+      if(count === 0){
+        const grid = parseGridLayout(items);
+        if(grid.count > 0){ schedule = grid.schedule; count = grid.count; }
+      }
+      if(count === 0){
+        scheduleSourceLabel.textContent = "Couldn't parse that PDF — still showing the previous timetable";
+        return;
+      }
+      activeSchedule = schedule;
+      scheduleSourceLabel.textContent = file.name;
+      render(selectedDay);
+    }catch(err){
+      scheduleSourceLabel.textContent = "Couldn't read that PDF.";
+    }
+  });
 
   const seg = document.getElementById("viewSwitch");
   seg.querySelectorAll(".seg-btn").forEach(btn=>{
