@@ -1,30 +1,423 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Free Time — Schedule &amp; Compare</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Time — Schedule &amp; Compare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-:root{--bg:#000;--surface:rgba(255,255,255,.045);--surface-strong:rgba(255,255,255,.075);--border:rgba(255,255,255,.09);--border-strong:rgba(255,255,255,.18);--primary:rgba(255,255,255,.95);--secondary:rgba(255,255,255,.6);--tertiary:rgba(255,255,255,.36);--blue:#0A84FF;--green:#30D158;--free:#A5D6A7;--orange:#FF9F0A;--orange-light:#FFC880;--purple:#BF5AF2}*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:48px 20px 80px;background:radial-gradient(ellipse 900px 500px at 50% -10%,rgba(10,132,255,.1),transparent 60%),radial-gradient(ellipse 700px 500px at 90% 10%,rgba(191,90,242,.06),transparent 60%),var(--bg);color:var(--primary);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.wrap{max-width:820px;margin:auto}header{text-align:center;margin-bottom:36px}.eyebrow{color:var(--blue);font-size:12px;font-weight:700;letter-spacing:.14em;margin:0 0 10px;text-transform:uppercase}h1{margin:0 0 8px;font-size:clamp(32px,6vw,46px);letter-spacing:-.03em}.sub{color:var(--secondary);font-size:15px;margin:0}.segmented{position:relative;display:flex;width:min(340px,100%);margin:28px auto 30px;padding:4px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}.seg-btn{z-index:1;flex:1;border:0;border-radius:10px;padding:10px 14px;background:transparent;color:var(--secondary);font:600 14px inherit;cursor:pointer}.seg-btn.active{color:#000}.seg-thumb{position:absolute;inset:4px auto 4px 4px;width:calc(50% - 4px);border-radius:10px;background:linear-gradient(135deg,#fff,#e4e4e8);transition:transform .3s}.segmented.compare-active .seg-thumb{transform:translateX(100%)}.view{display:none}.view.active{display:block;animation:fade .25s ease}@keyframes fade{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}.daytabs{display:flex;gap:6px;overflow:auto;margin:18px 0;padding-bottom:4px}.daytab{flex:none;padding:9px 15px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--secondary);font:600 13px inherit;cursor:pointer}.daytab.active{border-color:var(--blue);background:var(--blue);color:white;box-shadow:0 4px 16px rgba(10,132,255,.35)}.board,.upload-card{border:1px solid var(--border);border-radius:20px;background:var(--surface);box-shadow:0 20px 60px rgba(0,0,0,.45);backdrop-filter:blur(20px)}.summary{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:20px 22px;border-bottom:1px solid var(--border)}.summary-label{color:var(--tertiary);font-size:12px;font-weight:700;letter-spacing:.1em}.summary-value{color:var(--green);font-size:20px;font-weight:700}.row{display:grid;grid-template-columns:112px 1fr auto;gap:14px;align-items:center;padding:16px 22px;border-bottom:1px solid var(--border)}.row-time{font-size:13px;font-weight:600}.row.busy .row-time{color:var(--orange-light)}.row.busy .row-title{color:var(--orange)}.row.free{cursor:pointer}.row.free:hover{background:rgba(48,209,88,.05)}.row.free .row-time{color:var(--free)}.row.free .row-title{color:var(--green)}.row-title{margin:0 0 2px;font-size:15.5px;font-weight:600}.row-sub{color:var(--tertiary);font-size:12.5px}.pill{padding:5px 10px;border-radius:7px;font-size:10.5px;font-weight:700;letter-spacing:.06em}.busy .pill{color:var(--orange);background:rgba(255,159,10,.12)}.free .pill{color:var(--free);background:rgba(165,214,167,.12)}.room-panel{display:none;padding:4px 22px 18px;background:rgba(0,0,0,.25);border-bottom:1px solid var(--border)}.room-panel.open{display:block}.room-note{margin:10px 0 14px;padding:10px 12px;border:1px dashed var(--border-strong);border-radius:10px;color:var(--tertiary);font-size:11.5px;line-height:1.5}.room-block{margin:12px 0}.room-block-name{margin:0 0 6px;color:var(--secondary);font-size:12.5px}.room-seg{display:flex;justify-content:space-between;margin:4px 0;padding:8px 12px;border-radius:9px;font-size:12.5px}.room-seg.free{color:var(--free);background:rgba(165,214,167,.09)}.room-seg.occupied{color:var(--tertiary);background:rgba(255,255,255,.03)}.empty-day{padding:48px 22px;text-align:center;color:var(--tertiary)}.upload-card{padding:20px;margin-bottom:18px}.upload-card-header{display:flex;gap:9px;align-items:center;margin-bottom:10px}.upload-dot{width:9px;height:9px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px rgba(10,132,255,.7)}.dot-b{background:var(--purple);box-shadow:0 0 10px rgba(191,90,242,.7)}.upload-card-title{font-size:14.5px;font-weight:700}.upload-status{margin-bottom:14px;color:var(--green);font-size:12.5px}.upload-status.empty{color:var(--tertiary)}.upload-status.error{color:var(--orange)}.upload-actions{display:flex;gap:8px}.upload-btn{display:inline-block;border:1px solid var(--border-strong);border-radius:9px;padding:9px 14px;background:var(--surface-strong);color:var(--primary);font:600 12.5px inherit;cursor:pointer}.upload-btn:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.12)}.upload-btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}.upload-btn.primary:hover{background:#2b95ff}#scheduleView>.upload-card{text-align:center}#scheduleView>.upload-card .upload-card-header,#scheduleView>.upload-card .upload-actions{justify-content:center}.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.compare-grid .upload-card{margin:0}.preview-list{display:none;max-height:230px;overflow:auto;margin-top:10px;padding-top:8px;border-top:1px solid var(--border)}.preview-list.open{display:block}.preview-day{margin:10px 0 4px;color:var(--tertiary);font-size:11px;font-weight:700}.preview-item{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);color:var(--secondary);font-size:12px}.compare-placeholder{padding:50px 24px;border:1px dashed var(--border-strong);border-radius:18px;color:var(--tertiary);text-align:center}.chevron{margin-left:6px;color:var(--tertiary);font-size:10px}footer{margin-top:30px;color:var(--tertiary);font-size:11.5px;text-align:center}.compare-toolbar-center{display:flex;justify-content:center;margin:2px 0 26px}#printOverlay{display:none;position:fixed;inset:0;background:#1b1f26;z-index:200;overflow-y:auto}#printOverlay.open{display:block}.print-overlay-bar{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px 16px;background:#0d1117;border-bottom:1px solid rgba(255,255,255,.08)}.print-overlay-bar .hint{font-size:11.5px;color:var(--tertiary);margin-left:6px}.print-overlay-bar button{font-family:inherit;font-size:13px;font-weight:600;border-radius:9px;padding:9px 16px;cursor:pointer;border:1px solid var(--border-strong)}#printNowBtn{background:var(--blue);border-color:var(--blue);color:#fff}#closePrintOverlay{background:transparent;color:var(--secondary)}#printArea{width:min(760px,94%);margin:28px auto 60px;background:#fff;color:#111;border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.5)}@media print{body>*:not(#printOverlay){display:none!important}.print-overlay-bar{display:none!important}#printOverlay{position:static;background:none;overflow:visible}#printArea{width:100%;margin:0;box-shadow:none;border-radius:0}#printArea,#printArea *{page-break-inside:avoid}@page{margin:10mm;size:A4}}.print-header{background:#0d1421;color:#fff;padding:14px 22px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.print-header h1{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-.02em}.print-header p{font-size:10.5px;color:#b8c2d4;margin:0 0 7px}.print-legend{font-size:10px;color:#dfe6f0}.print-legend .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}.print-legend .dot.blue{background:#0A84FF}.print-legend .dot.purple{background:#BF5AF2;margin-left:14px}#printBody{padding:12px 22px 4px}.print-day h2{font-size:13px;font-weight:700;color:#151b26;margin:10px 0 6px;padding-left:9px;border-left:3px solid #0A84FF}.print-day:first-child h2{margin-top:0}.print-empty{font-size:10.5px;color:#9aa3b0;font-style:italic;margin:0 0 4px;padding-left:9px}.print-slots{border:1px solid #e6e8ec;border-radius:7px;overflow:hidden}.print-slot-row{display:flex;justify-content:space-between;padding:6px 12px;font-size:11px;border-bottom:1px solid #eef0f3}.print-slot-row:last-child{border-bottom:none}.print-slot-row:nth-child(even){background:#f6f7f9}.print-slot-row .print-time{font-weight:700;color:#1a1f28}.print-slot-row .print-dur{color:#1f9d55;font-weight:600}.print-footer{padding:10px 22px;border-top:1px solid #e6e8ec;font-size:8.5px;color:#9aa3b0}@media(max-width:640px){body{padding:30px 14px 60px}.compare-grid{grid-template-columns:1fr}.row{grid-template-columns:90px 1fr auto;padding:14px}.summary{padding:18px}}
+  :root {
+    --bg: #000000;
+    --surface: rgba(255,255,255,0.045);
+    --surface-strong: rgba(255,255,255,0.075);
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.18);
+    --primary: rgba(255,255,255,0.95);
+    --secondary: rgba(255,255,255,0.60);
+    --tertiary: rgba(255,255,255,0.36);
+    --blue: #0A84FF;
+    --green: #30D158;
+    --free: #A5D6A7;
+    --orange: #FF9F0A;
+    --orange-light: #FFC880;
+    --purple: #BF5AF2;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 48px 20px 80px;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(10,132,255,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 90% 10%, rgba(191,90,242,0.06), transparent 60%),
+      var(--bg);
+    color: var(--primary);
+    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .wrap { max-width: 820px; margin: 0 auto; }
+
+  /* ---------- Header ---------- */
+  header { text-align: center; margin-bottom: 36px; }
+  .eyebrow {
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+  }
+  h1 { margin: 0 0 8px; font-size: clamp(32px, 6vw, 46px); letter-spacing: -0.03em; }
+  .sub { color: var(--secondary); font-size: 15px; margin: 0; }
+
+  /* ---------- Segmented control ---------- */
+  .segmented {
+    position: relative;
+    display: flex;
+    width: min(340px, 100%);
+    margin: 28px auto 30px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+  }
+  .seg-btn {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    background: transparent;
+    color: var(--secondary);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .seg-btn.active { color: #000; }
+  .seg-thumb {
+    position: absolute;
+    inset: 4px auto 4px 4px;
+    width: calc(50% - 4px);
+    border-radius: 10px;
+    background: linear-gradient(135deg, #fff, #e4e4e8);
+    transition: transform 0.3s ease;
+  }
+  .segmented.compare-active .seg-thumb { transform: translateX(100%); }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fade 0.25s ease; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(7px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ---------- Day tabs ---------- */
+  .daytabs { display: flex; gap: 6px; overflow-x: auto; margin: 18px 0; padding-bottom: 4px; }
+  .daytab {
+    flex: none;
+    padding: 9px 15px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--secondary);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .daytab.active {
+    border-color: var(--blue);
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(10,132,255,0.35);
+  }
+
+  /* ---------- Cards ---------- */
+  .board, .upload-card {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-label { color: var(--tertiary); font-size: 12px; font-weight: 700; letter-spacing: 0.1em; }
+  .summary-value { color: var(--green); font-size: 20px; font-weight: 700; }
+
+  /* ---------- Rows ---------- */
+  .row {
+    display: grid;
+    grid-template-columns: 112px 1fr auto;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+  }
+  .row-time { font-size: 13px; font-weight: 700; }
+  .row-title { margin: 0 0 2px; font-size: 15.5px; font-weight: 700; }
+  .row-sub { color: var(--tertiary); font-size: 12.5px; }
+
+  .row.busy .row-time  { color: var(--orange-light); }
+  .row.busy .row-title { color: var(--orange); }
+
+  .row.free { cursor: pointer; }
+  .row.free:hover { background: rgba(48,209,88,0.05); }
+  .row.free .row-time  { color: var(--free); }
+  .row.free .row-title { color: var(--green); }
+
+  .pill { padding: 5px 10px; border-radius: 7px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; }
+  .busy .pill { color: var(--orange); background: rgba(255,159,10,0.12); }
+  .free .pill { color: var(--free); background: rgba(165,214,167,0.12); }
+
+  .chevron { margin-left: 6px; color: var(--tertiary); font-size: 10px; }
+
+  /* ---------- Room availability panel ---------- */
+  .room-panel {
+    display: none;
+    padding: 4px 22px 18px;
+    background: rgba(0,0,0,0.25);
+    border-bottom: 1px solid var(--border);
+  }
+  .room-panel.open { display: block; }
+  .room-note {
+    margin: 10px 0 14px;
+    padding: 10px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    color: var(--tertiary);
+    font-size: 11.5px;
+    line-height: 1.5;
+  }
+  .room-block { margin: 12px 0; }
+  .room-block-name { margin: 0 0 6px; color: var(--secondary); font-size: 12.5px; font-weight: 700; }
+  .room-seg {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    padding: 8px 12px;
+    border-radius: 9px;
+    font-size: 12.5px;
+  }
+  .room-seg.free     { color: var(--free); background: rgba(165,214,167,0.09); }
+  .room-seg.occupied { color: var(--tertiary); background: rgba(255,255,255,0.03); }
+
+  .empty-day { padding: 48px 22px; text-align: center; color: var(--tertiary); }
+
+  /* ---------- Upload cards ---------- */
+  .upload-card { padding: 20px; margin-bottom: 18px; }
+  .upload-card-header { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .upload-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 10px rgba(10,132,255,0.7); }
+  .upload-dot.dot-b { background: var(--purple); box-shadow: 0 0 10px rgba(191,90,242,0.7); }
+  .upload-card-title { font-size: 14.5px; font-weight: 700; }
+  .upload-status { margin-bottom: 14px; color: var(--green); font-size: 12.5px; }
+  .upload-status.empty { color: var(--tertiary); }
+  .upload-status.error { color: var(--orange); }
+  .upload-actions { display: flex; gap: 8px; }
+  .upload-btn {
+    display: inline-block;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    padding: 9px 14px;
+    background: var(--surface-strong);
+    color: var(--primary);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .upload-btn:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.12); }
+  .upload-btn.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .upload-btn.primary:hover { background: #2b95ff; }
+
+  #scheduleView > .upload-card { text-align: center; }
+  #scheduleView > .upload-card .upload-card-header,
+  #scheduleView > .upload-card .upload-actions { justify-content: center; }
+
+  /* ---------- Compare ---------- */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .compare-grid .upload-card { margin: 0; }
+
+  .preview-list { display: none; max-height: 230px; overflow-y: auto; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .preview-list.open { display: block; }
+  .preview-day { margin: 10px 0 4px; color: var(--tertiary); font-size: 11px; font-weight: 700; }
+  .preview-item { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--secondary); font-size: 12px; }
+
+  .compare-toolbar-center { display: flex; justify-content: center; margin: 22px 0 0; }
+
+  .compare-placeholder {
+    padding: 50px 24px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 18px;
+    color: var(--tertiary);
+    text-align: center;
+  }
+
+  footer { margin-top: 30px; color: var(--tertiary); font-size: 11.5px; text-align: center; }
+
+  /* ---------- Print / PDF overlay ---------- */
+  #printOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #1b1f26;
+    z-index: 200;
+    overflow-y: auto;
+  }
+  #printOverlay.open { display: block; }
+  .print-overlay-bar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #0d1117;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .print-overlay-bar .hint { font-size: 11.5px; color: var(--tertiary); margin-left: 6px; }
+  .print-overlay-bar button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    border-radius: 9px;
+    padding: 9px 16px;
+    cursor: pointer;
+    border: 1px solid var(--border-strong);
+  }
+  #printNowBtn { background: var(--blue); border-color: var(--blue); color: #fff; }
+  #closePrintOverlay { background: transparent; color: var(--secondary); }
+
+  #printArea {
+    width: min(760px, 94%);
+    margin: 28px auto 60px;
+    background: #fff;
+    color: #111;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.5);
+  }
+
+  @media print {
+    body > *:not(#printOverlay) { display: none !important; }
+    .print-overlay-bar { display: none !important; }
+    #printOverlay { position: static; background: none; overflow: visible; }
+    #printArea { width: 100%; margin: 0; box-shadow: none; border-radius: 0; }
+    #printArea, #printArea * { page-break-inside: avoid; }
+    @page { margin: 10mm; size: A4; }
+  }
+
+  .print-header { background: #0d1421; color: #fff; padding: 14px 22px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .print-header h1 { font-size: 20px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.02em; }
+  .print-header p { font-size: 10.5px; color: #b8c2d4; margin: 0 0 7px; }
+  .print-legend { font-size: 10px; color: #dfe6f0; }
+  .print-legend .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+  .print-legend .dot.blue { background: #0A84FF; }
+  .print-legend .dot.purple { background: #BF5AF2; margin-left: 14px; }
+
+  #printBody { padding: 12px 22px 4px; }
+  .print-day h2 { font-size: 13px; font-weight: 700; color: #151b26; margin: 10px 0 6px; padding-left: 9px; border-left: 3px solid #0A84FF; }
+  .print-day:first-child h2 { margin-top: 0; }
+  .print-empty { font-size: 10.5px; color: #9aa3b0; font-style: italic; margin: 0 0 4px; padding-left: 9px; }
+  .print-slots { border: 1px solid #e6e8ec; border-radius: 7px; overflow: hidden; }
+  .print-slot-row { display: flex; justify-content: space-between; padding: 6px 12px; font-size: 11px; border-bottom: 1px solid #eef0f3; }
+  .print-slot-row:last-child { border-bottom: none; }
+  .print-slot-row:nth-child(even) { background: #f6f7f9; }
+  .print-slot-row .print-time { font-weight: 700; color: #1a1f28; }
+  .print-slot-row .print-dur { color: #1f9d55; font-weight: 700; }
+  .print-footer { padding: 10px 22px; border-top: 1px solid #e6e8ec; font-size: 8.5px; color: #9aa3b0; }
+
+  @media (max-width: 640px) {
+    body { padding: 30px 14px 60px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 90px 1fr auto; padding: 14px; }
+    .summary { padding: 18px; }
+  }
 </style>
 </head>
-<body><div class="wrap">
-<header><p class="eyebrow">BT-CSE-SPZ · SEC B5</p><h1>Free Time</h1><p class="sub">See your open windows, or compare with a friend's timetable</p></header>
-<div class="segmented" id="viewSwitch"><button class="seg-btn active" data-view="schedule">Schedule</button><button class="seg-btn" data-view="compare">Compare</button><div class="seg-thumb"></div></div>
-<section id="scheduleView" class="view active">
- <div class="upload-card"><div class="upload-card-header"><span class="upload-dot"></span><span class="upload-card-title">Your Schedule</span></div><div class="upload-status empty" id="scheduleStatus">Upload your timetable PDF to begin</div><div class="upload-actions"><label class="upload-btn">Upload PDF<input id="scheduleFile" type="file" accept="application/pdf" hidden></label></div></div>
- <div class="daytabs" id="dayTabs"></div><div class="board"><div class="summary"><span class="summary-label" id="dayLabel"></span><span class="summary-value" id="freeTotal"></span></div><div id="rows"></div></div>
-</section>
-<section id="compareView" class="view"><div class="compare-grid">
- <div class="upload-card"><div class="upload-card-header"><span class="upload-dot"></span><span class="upload-card-title">Schedule A</span></div><div class="upload-status" id="statusA">Included timetable loaded</div><div class="upload-actions"><label class="upload-btn">Upload PDF<input id="fileA" type="file" accept="application/pdf" hidden></label></div><button class="upload-btn" id="previewAButton" style="margin-top:8px">Show parsed classes</button><div class="preview-list" id="previewA"></div></div>
- <div class="upload-card"><div class="upload-card-header"><span class="upload-dot dot-b"></span><span class="upload-card-title">Schedule B</span></div><div class="upload-status empty" id="statusB">No timetable loaded yet</div><div class="upload-actions"><label class="upload-btn">Upload PDF<input id="fileB" type="file" accept="application/pdf" hidden></label></div><button class="upload-btn" id="previewBButton" hidden style="margin-top:8px">Show parsed classes</button><div class="preview-list" id="previewB"></div></div>
- </div>
- <div class="compare-toolbar-center" id="downloadWrap" hidden><button class="upload-btn primary" id="downloadPdfBtn">&#8681; Download PDF</button></div>
- <div id="compareResults" hidden><div class="daytabs" id="compareDayTabs"></div><div class="board"><div class="summary"><span class="summary-label" id="compareDayLabel"></span><span class="summary-value" id="compareFreeTotal"></span></div><div id="compareRows"></div></div></div><div class="compare-placeholder" id="comparePlaceholder">Upload Schedule B above to see when you're both free.</div>
-</section><footer>Timetable repeats weekly · parsing runs entirely in your browser — nothing is uploaded anywhere</footer></div>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">BT-CSE-SPZ &middot; SEC B5</p>
+    <h1>Free Time</h1>
+    <p class="sub">See your open windows, or compare with a friend's timetable</p>
+  </header>
+
+  <div class="segmented" id="viewSwitch">
+    <button class="seg-btn active" data-view="schedule">Schedule</button>
+    <button class="seg-btn" data-view="compare">Compare</button>
+    <div class="seg-thumb"></div>
+  </div>
+
+  <!-- ===== Schedule view ===== -->
+  <section id="scheduleView" class="view active">
+    <div class="upload-card">
+      <div class="upload-card-header">
+        <span class="upload-dot"></span>
+        <span class="upload-card-title">Your Schedule</span>
+      </div>
+      <div class="upload-status empty" id="scheduleStatus">Upload your timetable PDF to begin</div>
+      <div class="upload-actions">
+        <label class="upload-btn">Upload PDF<input id="scheduleFile" type="file" accept="application/pdf" hidden></label>
+      </div>
+    </div>
+
+    <div class="daytabs" id="dayTabs"></div>
+    <div class="board">
+      <div class="summary">
+        <span class="summary-label" id="dayLabel"></span>
+        <span class="summary-value" id="freeTotal"></span>
+      </div>
+      <div id="rows"></div>
+    </div>
+  </section>
+
+  <!-- ===== Compare view ===== -->
+  <section id="compareView" class="view">
+    <div class="compare-grid">
+      <div class="upload-card">
+        <div class="upload-card-header">
+          <span class="upload-dot"></span>
+          <span class="upload-card-title">Schedule A</span>
+        </div>
+        <div class="upload-status" id="statusA">Included timetable loaded</div>
+        <div class="upload-actions">
+          <label class="upload-btn">Upload PDF<input id="fileA" type="file" accept="application/pdf" hidden></label>
+        </div>
+        <button class="upload-btn" id="previewAButton" style="margin-top:8px;">Show parsed classes</button>
+        <div class="preview-list" id="previewA"></div>
+      </div>
+
+      <div class="upload-card">
+        <div class="upload-card-header">
+          <span class="upload-dot dot-b"></span>
+          <span class="upload-card-title">Schedule B</span>
+        </div>
+        <div class="upload-status empty" id="statusB">No timetable loaded yet</div>
+        <div class="upload-actions">
+          <label class="upload-btn">Upload PDF<input id="fileB" type="file" accept="application/pdf" hidden></label>
+        </div>
+        <button class="upload-btn" id="previewBButton" hidden style="margin-top:8px;">Show parsed classes</button>
+        <div class="preview-list" id="previewB"></div>
+      </div>
+    </div>
+
+    <div id="compareResults" hidden>
+      <div class="daytabs" id="compareDayTabs"></div>
+      <div class="board">
+        <div class="summary">
+          <span class="summary-label" id="compareDayLabel"></span>
+          <span class="summary-value" id="compareFreeTotal"></span>
+        </div>
+        <div id="compareRows"></div>
+      </div>
+    </div>
+
+    <div class="compare-toolbar-center" id="downloadWrap" hidden>
+      <button class="upload-btn primary" id="downloadPdfBtn">&#8681; Download PDF</button>
+    </div>
+
+    <div class="compare-placeholder" id="comparePlaceholder">Upload Schedule B above to see when you're both free.</div>
+  </section>
+
+  <footer>Timetable repeats weekly &middot; parsing runs entirely in your browser — nothing is uploaded anywhere</footer>
+</div>
 
 <div id="printOverlay">
   <div class="print-overlay-bar">
@@ -44,31 +437,537 @@
 </div>
 
 <script>
-pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-const SCHEDULE={Monday:[{start:'15:00',end:'15:55',title:'Formal Languages and Automata Theory',room:'2103'}],Tuesday:[{start:'09:00',end:'09:55',title:'Formal Languages and Automata Theory',room:'4103'},{start:'10:00',end:'10:55',title:'Backend Development',room:'9206'},{start:'14:00',end:'14:55',title:'Object Oriented Analysis and Design',room:'4104'},{start:'16:00',end:'16:55',title:'Research Methodology in CS',room:'4103'}],Wednesday:[{start:'09:00',end:'09:55',title:'Cryptography and Network Security',room:'4104'},{start:'15:00',end:'15:55',title:'Formal Languages and Automata Theory',room:'4103'},{start:'16:00',end:'16:55',title:'Research Methodology in CS',room:'4104'},{start:'17:00',end:'17:55',title:'Object Oriented Analysis and Design',room:'4103'}],Thursday:[{start:'14:00',end:'14:55',title:'Backend Development',room:'10205'},{start:'16:00',end:'16:55',title:'EDGE — Advance Communication',room:'9108'},{start:'17:00',end:'17:55',title:'Probability, Entropy, and MC Simulation',room:'4103'}],Friday:[{start:'13:00',end:'13:55',title:'Backend Development',room:'3002'},{start:'15:00',end:'15:55',title:'Cryptography and Network Security',room:'4104'},{start:'16:00',end:'16:55',title:'Research Methodology in CS',room:'4104'},{start:'17:00',end:'17:55',title:'Probability, Entropy, and MC Simulation',room:'4103'}],Saturday:[{start:'10:00',end:'10:55',title:'Probability, Entropy, and MC Simulation',room:'4103'},{start:'12:00',end:'13:55',title:'Backend Development',room:'IT 201'},{start:'15:00',end:'15:55',title:'Cryptography and Network Security',room:'4103'},{start:'16:00',end:'16:55',title:'Object Oriented Analysis and Design',room:'4102'},{start:'17:00',end:'17:55',title:'Backend Development',room:'4102'}],Sunday:[]};
-const EXTRA_ROOM_BOOKINGS={'4101':{Monday:[{start:'09:00',end:'10:30'}],Wednesday:[{start:'13:00',end:'14:30'}]},'4102':{Tuesday:[{start:'10:00',end:'12:00'}],Thursday:[{start:'15:00',end:'16:30'}]},'4201':{Friday:[{start:'09:00',end:'11:00'}],Saturday:[{start:'14:00',end:'15:30'}]},'5101':{Monday:[{start:'12:00',end:'13:00'}],Tuesday:[{start:'14:00',end:'16:00'}]}};
-const DAYS=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],DAY_START='08:00',DAY_END='18:00',MIN_FREE=15;let activeSchedule=cloneSchedule({}),currentDay=DAYS[0],scheduleA=SCHEDULE,scheduleB=null,compareDay=DAYS[0];
-const min=t=>{const [h,m]=t.split(':').map(Number);return h*60+m};const iso=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');const pretty=t=>{let [h,m]=t.split(':').map(Number);return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`};
-function cloneSchedule(s){return Object.fromEntries(DAYS.map(d=>[d,[...(s[d]||[])] ]))}function intervals(classes){return [...classes].sort((a,b)=>min(a.start)-min(b.start))}function roundedFree(out,start,end){const roundedStart=Math.ceil(start/60)*60,roundedEnd=Math.floor(end/60)*60;if(roundedEnd-roundedStart>=MIN_FREE)out.push({start:iso(roundedStart),end:iso(roundedEnd)})}function freeSlots(classes){let out=[],cursor=min(DAY_START);for(const c of intervals(classes)){let s=Math.max(min(c.start),min(DAY_START)),e=Math.min(min(c.end),min(DAY_END));if(s-cursor>=MIN_FREE)roundedFree(out,cursor,s);cursor=Math.max(cursor,e)}if(min(DAY_END)-cursor>=MIN_FREE)roundedFree(out,cursor,min(DAY_END));return out}function duration(slots){return slots.reduce((n,x)=>n+min(x.end)-min(x.start),0)}function durationLabel(n){return `${Math.floor(n/60)}h ${n%60}m`}
-function showTabs(container,selected,change){container.innerHTML=DAYS.map(d=>`<button class="daytab ${d===selected?'active':''}" data-day="${d}">${d.slice(0,3)}</button>`).join('');container.querySelectorAll('button').forEach(b=>b.onclick=()=>change(b.dataset.day))}
-function roomBookings(room,day){return [...(EXTRA_ROOM_BOOKINGS[room]?.[day]||[]),...(activeSchedule[day]||[]).filter(c=>c.room===room)].map(x=>({start:x.start,end:x.end}))}function roomSegments(room,day,start,end){let blocks=intervals(roomBookings(room,day)),cursor=min(start),finish=min(end),out=[];for(const b of blocks){let s=Math.max(min(b.start),cursor),e=Math.min(min(b.end),finish);if(e<=cursor)continue;if(s>cursor)out.push({start:iso(cursor),end:iso(s),free:true});out.push({start:iso(s),end:iso(e),free:false});cursor=Math.max(cursor,e)}if(cursor<finish)out.push({start:iso(cursor),end:iso(finish),free:true});return out}
-function renderRooms(day,slot){const rooms=[...new Set([...Object.keys(EXTRA_ROOM_BOOKINGS),...Object.values(activeSchedule).flat().map(c=>c.room)])].sort();return `<div class="room-note">Demo room availability combines your current timetable with the sample bookings for rooms 4101, 4102, 4201 and 5101.</div>${rooms.map(room=>`<div class="room-block"><p class="room-block-name">Room ${room}</p>${roomSegments(room,day,slot.start,slot.end).map(s=>`<div class="room-seg ${s.free?'free':'occupied'}"><span>${pretty(s.start)}–${pretty(s.end)}</span><strong>${s.free?'FREE':'OCCUPIED'}</strong></div>`).join('')}</div>`).join('')}`}
-function renderSchedule(){showTabs(dayTabs,currentDay,d=>{currentDay=d;renderSchedule()});dayLabel.textContent=currentDay.toUpperCase();const classes=intervals(activeSchedule[currentDay]||[]),slots=freeSlots(classes),hasUpload=Object.values(activeSchedule).some(day=>day.length);freeTotal.textContent=hasUpload?`${durationLabel(duration(slots))} free today`:'— free today';if(!hasUpload){rows.innerHTML='<div class="empty-day">Upload a timetable PDF to see your schedule and free time.</div>';return}const timeline=[...classes.map(c=>({kind:'busy',start:c.start,end:c.end,data:c})),...slots.map(s=>({kind:'free',start:s.start,end:s.end,data:s}))].sort((a,b)=>min(a.start)-min(b.start));let html='',freeIndex=0;for(const item of timeline){if(item.kind==='busy'){const c=item.data;html+=`<div class="row busy"><div class="row-time">${pretty(c.start)}–${pretty(c.end)}</div><div><p class="row-title">${escapeHtml(c.title)}</p><span class="row-sub">Room ${escapeHtml(c.room||'—')}</span></div><span class="pill">Busy</span></div>`}else{const s=item.data,i=freeIndex++;html+=`<div class="row free" data-slot="${i}"><div class="row-time">${pretty(s.start)}–${pretty(s.end)}</div><div><p class="row-title">Free time <span class="chevron">›</span></p><span class="row-sub">Tap to view room availability</span></div><span class="pill">Free</span></div><div class="room-panel" id="room-${i}">${renderRooms(currentDay,s)}</div>`}}rows.innerHTML=html;rows.querySelectorAll('.row.free').forEach(el=>el.onclick=()=>document.getElementById('room-'+el.dataset.slot).classList.toggle('open'))}
-function escapeHtml(s){return String(s||'Class').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]))}
-async function pdfData(file){const doc=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise, pages=[];for(let i=1;i<=doc.numPages;i++){const content=await (await doc.getPage(i)).getTextContent();pages.push(content.items.filter(x=>x.str.trim()).map(x=>({text:x.str.trim(),x:x.transform[4],y:x.transform[5]})))}return pages}
-function normalizeTime(raw,ampm){let [h,m]=raw.replace('.',':').split(':').map(Number),period=(ampm||'').replace(/\./g,'').toLowerCase();if(period==='pm'&&h<12)h+=12;if(period==='am'&&h===12)h=0;return String(h).padStart(2,'0')+':'+String(m||0).padStart(2,'0')}
-function dayName(value){const key=value.toLowerCase().slice(0,3);return ({mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday',sun:'Sunday'})[key]}
-const timeRange=/(\d{1,2}(?::|\.)\d{2})\s*(a\.?m\.?|p\.?m\.?)?\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)\d{2})\s*(a\.?m\.?|p\.?m\.?)?/gi;
-function addEntries(text,day,parsed){let m,found=0;timeRange.lastIndex=0;while((m=timeRange.exec(text))){const tail=text.slice(timeRange.lastIndex).split(/(?=\d{1,2}(?::|\.)\d{2}\s*(?:a\.?m\.?|p\.?m\.?)?\s*(?:-|–|—|to))/i)[0].trim(), beforeRoom=tail.split(/(?:room|classroom)\s*:/i)[0].trim();const room=(tail.match(/(?:room|classroom)\s*:\s*([A-Za-z]+(?:\s*\d+)?|\d{3,6})/i)||tail.match(/\b(\d{4,5})\b/))?.[1]?.trim()||'—';const title=(beforeRoom||tail).replace(/\bBT-[A-Za-z0-9_-]+\b.*/i,'').trim()||'Class';parsed[day].push({start:normalizeTime(m[1],m[2]||m[4]),end:normalizeTime(m[3],m[4]||m[2]),title,room});found++}return found}
-function parseTimetableText(text){const parsed=cloneSchedule({});let activeDay;for(const part of text.replace(/\s+/g,' ').split(/(?=\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b)/i)){const hit=part.match(/^\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/i);if(hit)activeDay=dayName(hit[1]);if(activeDay)addEntries(part,activeDay,parsed)}return parsed}
-function parsePositionedTimetable(pages){const parsed=cloneSchedule({});for(const items of pages){const headers=items.map(i=>({...i,day:dayName(i.text)})).filter(i=>i.day);if(!headers.length)continue;const lines=[];for(const item of [...items].sort((a,b)=>b.y-a.y||a.x-b.x)){let line=lines.find(l=>Math.abs(l.y-item.y)<3);if(!line){line={y:item.y,items:[]};lines.push(line)}line.items.push(item)}for(const line of lines){const cells=new Map(headers.map(h=>[h,[]]));for(const item of line.items){const header=headers.reduce((best,h)=>Math.abs(h.x-item.x)<Math.abs(best.x-item.x)?h:best,headers[0]);cells.get(header).push(item)}for(const [header,cell] of cells){const text=cell.sort((a,b)=>a.x-b.x).map(i=>i.text).join(' ');addEntries(text,header.day,parsed)}}}return parsed}
-function parseCalendarGrid(pages){const parsed=cloneSchedule({});for(const items of pages){const headers=items.map(i=>({...i,day:dayName(i.text)})).filter(i=>i.day), times=items.map(i=>({...i,time:/^\d{1,2}:\d{2}$/.test(i.text)?i.text:null})).filter(i=>i.time&&i.x<55);if(headers.length<2||times.length<3)continue;const blocked=new Set([...headers.map(i=>i.text),...times.map(i=>i.text)]);const events=items.filter(i=>!blocked.has(i.text)&&i.x>45&&!/^\d{4,5}(?:\(LAB\))?$/i.test(i.text)&&!/^ALL DAY$/i.test(i.text)&&!/^\d{1,2}:\d{2}$/.test(i.text));for(const event of events){const roomItem=items.find(i=>Math.abs(i.x-event.x)<12&&i.y<event.y&&event.y-i.y<45&&/^\d{4,5}(?:\(LAB\))?$/i.test(i.text));const header=headers.reduce((best,h)=>Math.abs(h.x-event.x)<Math.abs(best.x-event.x)?h:best,headers[0]);const marker=times.reduce((best,t)=>Math.abs(t.y-event.y)<Math.abs(best.y-event.y)?t:best,times[0]);const start=min(marker.time), end=start+60;if(!parsed[header.day].some(c=>c.start===iso(start)&&c.title===event.text))parsed[header.day].push({start:iso(start),end:iso(end),title:event.text,room:roomItem?.text||'—'})}}return parsed}
-function hasClasses(schedule){return Object.values(schedule).some(day=>day.length)}
-async function loadSchedule(file,target){try{target.textContent='Reading timetable…';target.className='upload-status';const pages=await pdfData(file), text=pages.flat().map(x=>x.text).join(' ');const sequential=parseTimetableText(text), positioned=parsePositionedTimetable(pages), calendar=parseCalendarGrid(pages), result=hasClasses(sequential)?sequential:hasClasses(positioned)?positioned:calendar;if(!hasClasses(result))throw new Error('This PDF could not be read as a timetable. Try a text-based PDF (not a photo or scan).');return result}catch(e){target.textContent=e.message;target.className='upload-status error';throw e}}
-scheduleFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{activeSchedule=await loadSchedule(f,scheduleStatus);scheduleStatus.textContent=`Loaded: ${f.name}`;scheduleStatus.className='upload-status';renderSchedule()}catch{}};
-function renderPreview(el,s){el.innerHTML=DAYS.map(d=>(s[d]||[]).length?`<div class="preview-day">${d}</div>${s[d].map(c=>`<div class="preview-item"><span>${pretty(c.start)}–${pretty(c.end)}</span><span>${escapeHtml(c.title)}</span></div>`).join('')}`:'').join('')||'<div class="preview-item">No classes found</div>'}previewAButton.onclick=()=>{renderPreview(previewA,scheduleA);previewA.classList.toggle('open');previewAButton.textContent=previewA.classList.contains('open')?'Hide parsed classes':'Show parsed classes'};fileA.onchange=async e=>{let f=e.target.files[0];if(!f)return;try{scheduleA=await loadSchedule(f,statusA);statusA.textContent=`Loaded: ${f.name}`;statusA.className='upload-status';if(scheduleB)renderCompare()}catch{}};fileB.onchange=async e=>{let f=e.target.files[0];if(!f)return;try{scheduleB=await loadSchedule(f,statusB);statusB.textContent=`Loaded: ${f.name}`;statusB.className='upload-status';previewBButton.hidden=false;downloadWrap.hidden=false;compareResults.hidden=false;comparePlaceholder.hidden=true;renderCompare()}catch{}};previewBButton.onclick=()=>{renderPreview(previewB,scheduleB);previewB.classList.toggle('open');previewBButton.textContent=previewB.classList.contains('open')?'Hide parsed classes':'Show parsed classes'};
-function commonFree(a,b){let result=[];for(const x of freeSlots(a))for(const y of freeSlots(b)){let s=Math.max(min(x.start),min(y.start)),e=Math.min(min(x.end),min(y.end));if(e-s>=MIN_FREE)result.push({start:iso(s),end:iso(e)})}return result}function renderCompare(){showTabs(compareDayTabs,compareDay,d=>{compareDay=d;renderCompare()});compareDayLabel.textContent=compareDay.toUpperCase();const slots=commonFree(scheduleA[compareDay]||[],scheduleB[compareDay]||[]);compareFreeTotal.textContent=`${durationLabel(duration(slots))} common free time`;compareRows.innerHTML=slots.length?slots.map(s=>`<div class="row free"><div class="row-time">${pretty(s.start)}–${pretty(s.end)}</div><div><p class="row-title">Common free time</p></div><span class="pill">Free</span></div>`).join(''):'<div class="empty-day">No common free time during the displayed hours.</div>'}
-function buildPrintArea(){printDate.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});printBody.innerHTML=DAYS.map(day=>{const slots=commonFree(scheduleA[day]||[],scheduleB[day]||[]);return `<div class="print-day"><h2>${day}</h2>${slots.length?`<div class="print-slots">${slots.map(s=>`<div class="print-slot-row"><span class="print-time">${pretty(s.start)} – ${pretty(s.end)}</span><span class="print-dur">${durationLabel(min(s.end)-min(s.start))} free</span></div>`).join('')}</div>`:'<p class="print-empty">No shared free time</p>'}</div>`}).join('')}
-downloadPdfBtn.onclick=()=>{if(!scheduleB)return;buildPrintArea();printOverlay.classList.add('open');document.body.style.overflow='hidden'};printNowBtn.onclick=()=>window.print();closePrintOverlay.onclick=()=>{printOverlay.classList.remove('open');document.body.style.overflow=''};
-document.querySelectorAll('.seg-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg-btn').forEach(x=>x.classList.toggle('active',x===b));viewSwitch.classList.toggle('compare-active',b.dataset.view==='compare');scheduleView.classList.toggle('active',b.dataset.view==='schedule');compareView.classList.toggle('active',b.dataset.view==='compare')});renderSchedule();
-</script></body></html>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  /* ============================================================
+     Default timetable (used as "Schedule A" until replaced)
+     ============================================================ */
+  const SCHEDULE = {
+    Monday: [
+      { start: "15:00", end: "15:55", title: "Formal Languages and Automata Theory", room: "2103" }
+    ],
+    Tuesday: [
+      { start: "09:00", end: "09:55", title: "Formal Languages and Automata Theory", room: "4103" },
+      { start: "10:00", end: "10:55", title: "Backend Development", room: "9206" },
+      { start: "14:00", end: "14:55", title: "Object Oriented Analysis and Design", room: "4104" },
+      { start: "16:00", end: "16:55", title: "Research Methodology in CS", room: "4103" }
+    ],
+    Wednesday: [
+      { start: "09:00", end: "09:55", title: "Cryptography and Network Security", room: "4104" },
+      { start: "15:00", end: "15:55", title: "Formal Languages and Automata Theory", room: "4103" },
+      { start: "16:00", end: "16:55", title: "Research Methodology in CS", room: "4104" },
+      { start: "17:00", end: "17:55", title: "Object Oriented Analysis and Design", room: "4103" }
+    ],
+    Thursday: [
+      { start: "14:00", end: "14:55", title: "Backend Development", room: "10205" },
+      { start: "16:00", end: "16:55", title: "EDGE — Advance Communication", room: "9108" },
+      { start: "17:00", end: "17:55", title: "Probability, Entropy, and MC Simulation", room: "4103" }
+    ],
+    Friday: [
+      { start: "13:00", end: "13:55", title: "Backend Development", room: "3002" },
+      { start: "15:00", end: "15:55", title: "Cryptography and Network Security", room: "4104" },
+      { start: "16:00", end: "16:55", title: "Research Methodology in CS", room: "4104" },
+      { start: "17:00", end: "17:55", title: "Probability, Entropy, and MC Simulation", room: "4103" }
+    ],
+    Saturday: [
+      { start: "10:00", end: "10:55", title: "Probability, Entropy, and MC Simulation", room: "4103" },
+      { start: "12:00", end: "13:55", title: "Backend Development", room: "IT 201" },
+      { start: "15:00", end: "15:55", title: "Cryptography and Network Security", room: "4103" },
+      { start: "16:00", end: "16:55", title: "Object Oriented Analysis and Design", room: "4102" },
+      { start: "17:00", end: "17:55", title: "Backend Development", room: "4102" }
+    ],
+    Sunday: []
+  };
+
+  /* Sample placeholder room-booking data — replace with real data once you have it. */
+  const EXTRA_ROOM_BOOKINGS = {
+    "4101": { Monday: [{ start: "09:00", end: "10:30" }], Wednesday: [{ start: "13:00", end: "14:30" }] },
+    "4102": { Tuesday: [{ start: "10:00", end: "12:00" }], Thursday: [{ start: "15:00", end: "16:30" }] },
+    "4201": { Friday: [{ start: "09:00", end: "11:00" }], Saturday: [{ start: "14:00", end: "15:30" }] },
+    "5101": { Monday: [{ start: "12:00", end: "13:00" }], Tuesday: [{ start: "14:00", end: "16:00" }] }
+  };
+
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const DAY_START = "08:00";
+  const DAY_END = "18:00";
+  const MIN_FREE = 15;
+
+  let activeSchedule = cloneSchedule({});
+  let currentDay = DAYS[0];
+  let scheduleA = SCHEDULE;
+  let scheduleB = null;
+  let compareDay = DAYS[0];
+
+  /* ============================================================
+     Time helpers
+     ============================================================ */
+  function toMinutes(t) {
+    const [h, m] = t.split(":").map(Number);
+    return h * 60 + m;
+  }
+  function toISO(n) {
+    return String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0");
+  }
+  function toPretty(t) {
+    let [h, m] = t.split(":").map(Number);
+    const period = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + String(m).padStart(2, "0") + " " + period;
+  }
+  function cloneSchedule(s) {
+    return Object.fromEntries(DAYS.map(d => [d, [...(s[d] || [])]]));
+  }
+  function sortedClasses(classes) {
+    return [...classes].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+  }
+  function pushRoundedFree(out, start, end) {
+    const roundedStart = Math.ceil(start / 60) * 60;
+    const roundedEnd = Math.floor(end / 60) * 60;
+    if (roundedEnd - roundedStart >= MIN_FREE) {
+      out.push({ start: toISO(roundedStart), end: toISO(roundedEnd) });
+    }
+  }
+  function freeSlots(classes) {
+    const out = [];
+    let cursor = toMinutes(DAY_START);
+    for (const c of sortedClasses(classes)) {
+      const s = Math.max(toMinutes(c.start), toMinutes(DAY_START));
+      const e = Math.min(toMinutes(c.end), toMinutes(DAY_END));
+      if (s - cursor >= MIN_FREE) pushRoundedFree(out, cursor, s);
+      cursor = Math.max(cursor, e);
+    }
+    if (toMinutes(DAY_END) - cursor >= MIN_FREE) pushRoundedFree(out, cursor, toMinutes(DAY_END));
+    return out;
+  }
+  function totalDuration(slots) {
+    return slots.reduce((n, x) => n + toMinutes(x.end) - toMinutes(x.start), 0);
+  }
+  function durationLabel(n) {
+    return Math.floor(n / 60) + "h " + (n % 60) + "m";
+  }
+  function escapeHtml(s) {
+    return String(s || "Class").replace(/[&<>"']/g, x => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[x]));
+  }
+
+  /* ============================================================
+     Day tabs
+     ============================================================ */
+  function renderDayTabs(container, selected, onChange) {
+    container.innerHTML = DAYS.map(d =>
+      `<button class="daytab ${d === selected ? "active" : ""}" data-day="${d}">${d.slice(0, 3)}</button>`
+    ).join("");
+    container.querySelectorAll("button").forEach(b => {
+      b.onclick = () => onChange(b.dataset.day);
+    });
+  }
+
+  /* ============================================================
+     Room availability
+     ============================================================ */
+  function roomBookings(room, day) {
+    return [
+      ...(EXTRA_ROOM_BOOKINGS[room]?.[day] || []),
+      ...(activeSchedule[day] || []).filter(c => c.room === room)
+    ].map(x => ({ start: x.start, end: x.end }));
+  }
+
+  function roomSegments(room, day, start, end) {
+    const blocks = sortedClasses(roomBookings(room, day));
+    let cursor = toMinutes(start);
+    const finish = toMinutes(end);
+    const out = [];
+    for (const b of blocks) {
+      const s = Math.max(toMinutes(b.start), cursor);
+      const e = Math.min(toMinutes(b.end), finish);
+      if (e <= cursor) continue;
+      if (s > cursor) out.push({ start: toISO(cursor), end: toISO(s), free: true });
+      out.push({ start: toISO(s), end: toISO(e), free: false });
+      cursor = Math.max(cursor, e);
+    }
+    if (cursor < finish) out.push({ start: toISO(cursor), end: toISO(finish), free: true });
+    return out;
+  }
+
+  function renderRoomPanel(day, slot) {
+    const rooms = [...new Set([
+      ...Object.keys(EXTRA_ROOM_BOOKINGS),
+      ...Object.values(activeSchedule).flat().map(c => c.room)
+    ])].sort();
+
+    const note = `<div class="room-note">Demo room availability combines your current timetable with sample bookings for rooms 4101, 4102, 4201 and 5101.</div>`;
+
+    const blocks = rooms.map(room => {
+      const segs = roomSegments(room, day, slot.start, slot.end).map(s =>
+        `<div class="room-seg ${s.free ? "free" : "occupied"}">
+           <span>${toPretty(s.start)}–${toPretty(s.end)}</span>
+           <strong>${s.free ? "FREE" : "OCCUPIED"}</strong>
+         </div>`
+      ).join("");
+      return `<div class="room-block"><p class="room-block-name">Room ${room}</p>${segs}</div>`;
+    }).join("");
+
+    return note + blocks;
+  }
+
+  /* ============================================================
+     Schedule view rendering
+     ============================================================ */
+  function renderSchedule() {
+    renderDayTabs(dayTabs, currentDay, d => { currentDay = d; renderSchedule(); });
+    dayLabel.textContent = currentDay.toUpperCase();
+
+    const classes = sortedClasses(activeSchedule[currentDay] || []);
+    const slots = freeSlots(classes);
+    const hasUpload = Object.values(activeSchedule).some(day => day.length);
+
+    freeTotal.textContent = hasUpload ? `${durationLabel(totalDuration(slots))} free today` : "— free today";
+
+    if (!hasUpload) {
+      rows.innerHTML = '<div class="empty-day">Upload a timetable PDF to see your schedule and free time.</div>';
+      return;
+    }
+
+    const timeline = [
+      ...classes.map(c => ({ kind: "busy", start: c.start, end: c.end, data: c })),
+      ...slots.map(s => ({ kind: "free", start: s.start, end: s.end, data: s }))
+    ].sort((a, b) => toMinutes(a.start) - toMinutes(b.start));
+
+    let html = "";
+    let freeIndex = 0;
+
+    for (const item of timeline) {
+      if (item.kind === "busy") {
+        const c = item.data;
+        html += `
+          <div class="row busy">
+            <div class="row-time">${toPretty(c.start)}–${toPretty(c.end)}</div>
+            <div>
+              <p class="row-title">${escapeHtml(c.title)}</p>
+              <span class="row-sub">Room ${escapeHtml(c.room || "—")}</span>
+            </div>
+            <span class="pill">Class</span>
+          </div>`;
+      } else {
+        const s = item.data;
+        const i = freeIndex++;
+        html += `
+          <div class="row free" data-slot="${i}">
+            <div class="row-time">${toPretty(s.start)}–${toPretty(s.end)}</div>
+            <div>
+              <p class="row-title">Free time <span class="chevron">›</span></p>
+              <span class="row-sub">Tap to view room availability</span>
+            </div>
+            <span class="pill">Free</span>
+          </div>
+          <div class="room-panel" id="room-${i}">${renderRoomPanel(currentDay, s)}</div>`;
+      }
+    }
+
+    rows.innerHTML = html;
+    rows.querySelectorAll(".row.free").forEach(el => {
+      el.onclick = () => document.getElementById("room-" + el.dataset.slot).classList.toggle("open");
+    });
+  }
+
+  /* ============================================================
+     PDF parsing — three strategies, tried in order
+     ============================================================ */
+  async function extractPdfPages(file) {
+    const doc = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+    const pages = [];
+    for (let i = 1; i <= doc.numPages; i++) {
+      const content = await (await doc.getPage(i)).getTextContent();
+      pages.push(
+        content.items
+          .filter(x => x.str.trim())
+          .map(x => ({ text: x.str.trim(), x: x.transform[4], y: x.transform[5] }))
+      );
+    }
+    return pages;
+  }
+
+  function normalizeTime(raw, ampm) {
+    let [h, m] = raw.replace(".", ":").split(":").map(Number);
+    const period = (ampm || "").replace(/\./g, "").toLowerCase();
+    if (period === "pm" && h < 12) h += 12;
+    if (period === "am" && h === 12) h = 0;
+    return String(h).padStart(2, "0") + ":" + String(m || 0).padStart(2, "0");
+  }
+
+  function dayNameFromToken(value) {
+    const key = value.toLowerCase().slice(0, 3);
+    return { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" }[key];
+  }
+
+  const TIME_RANGE = /(\d{1,2}(?::|\.)\d{2})\s*(a\.?m\.?|p\.?m\.?)?\s*(?:-|–|—|to)\s*(\d{1,2}(?::|\.)\d{2})\s*(a\.?m\.?|p\.?m\.?)?/gi;
+
+  function addEntriesFromText(text, day, parsed) {
+    let m;
+    let found = 0;
+    TIME_RANGE.lastIndex = 0;
+    while ((m = TIME_RANGE.exec(text))) {
+      const tail = text.slice(TIME_RANGE.lastIndex)
+        .split(/(?=\d{1,2}(?::|\.)\d{2}\s*(?:a\.?m\.?|p\.?m\.?)?\s*(?:-|–|—|to))/i)[0]
+        .trim();
+      const beforeRoom = tail.split(/(?:room|classroom)\s*:/i)[0].trim();
+      const room = (tail.match(/(?:room|classroom)\s*:\s*([A-Za-z]+(?:\s*\d+)?|\d{3,6})/i) || tail.match(/\b(\d{4,5})\b/))?.[1]?.trim() || "—";
+      const title = (beforeRoom || tail).replace(/\bBT-[A-Za-z0-9_-]+\b.*/i, "").trim() || "Class";
+      parsed[day].push({
+        start: normalizeTime(m[1], m[2] || m[4]),
+        end: normalizeTime(m[3], m[4] || m[2]),
+        title, room
+      });
+      found++;
+    }
+    return found;
+  }
+
+  function parseTimetableText(text) {
+    const parsed = cloneSchedule({});
+    let activeDay;
+    const parts = text.replace(/\s+/g, " ")
+      .split(/(?=\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b)/i);
+    for (const part of parts) {
+      const hit = part.match(/^\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/i);
+      if (hit) activeDay = dayNameFromToken(hit[1]);
+      if (activeDay) addEntriesFromText(part, activeDay, parsed);
+    }
+    return parsed;
+  }
+
+  function parsePositionedTimetable(pages) {
+    const parsed = cloneSchedule({});
+    for (const items of pages) {
+      const headers = items.map(i => ({ ...i, day: dayNameFromToken(i.text) })).filter(i => i.day);
+      if (!headers.length) continue;
+
+      const lines = [];
+      for (const item of [...items].sort((a, b) => b.y - a.y || a.x - b.x)) {
+        let line = lines.find(l => Math.abs(l.y - item.y) < 3);
+        if (!line) { line = { y: item.y, items: [] }; lines.push(line); }
+        line.items.push(item);
+      }
+
+      for (const line of lines) {
+        const cells = new Map(headers.map(h => [h, []]));
+        for (const item of line.items) {
+          const header = headers.reduce((best, h) => Math.abs(h.x - item.x) < Math.abs(best.x - item.x) ? h : best, headers[0]);
+          cells.get(header).push(item);
+        }
+        for (const [header, cell] of cells) {
+          const text = cell.sort((a, b) => a.x - b.x).map(i => i.text).join(" ");
+          addEntriesFromText(text, header.day, parsed);
+        }
+      }
+    }
+    return parsed;
+  }
+
+  function parseCalendarGrid(pages) {
+    const parsed = cloneSchedule({});
+    for (const items of pages) {
+      const headers = items.map(i => ({ ...i, day: dayNameFromToken(i.text) })).filter(i => i.day);
+      const times = items
+        .map(i => ({ ...i, time: /^\d{1,2}:\d{2}$/.test(i.text) ? i.text : null }))
+        .filter(i => i.time && i.x < 55);
+      if (headers.length < 2 || times.length < 3) continue;
+
+      const blocked = new Set([...headers.map(i => i.text), ...times.map(i => i.text)]);
+      const events = items.filter(i =>
+        !blocked.has(i.text) && i.x > 45 &&
+        !/^\d{4,5}(?:\(LAB\))?$/i.test(i.text) &&
+        !/^ALL DAY$/i.test(i.text) &&
+        !/^\d{1,2}:\d{2}$/.test(i.text)
+      );
+
+      for (const event of events) {
+        const roomItem = items.find(i =>
+          Math.abs(i.x - event.x) < 12 && i.y < event.y && event.y - i.y < 45 &&
+          /^\d{4,5}(?:\(LAB\))?$/i.test(i.text)
+        );
+        const header = headers.reduce((best, h) => Math.abs(h.x - event.x) < Math.abs(best.x - event.x) ? h : best, headers[0]);
+        const marker = times.reduce((best, t) => Math.abs(t.y - event.y) < Math.abs(best.y - event.y) ? t : best, times[0]);
+        const start = toMinutes(marker.time);
+        const end = start + 60;
+        if (!parsed[header.day].some(c => c.start === toISO(start) && c.title === event.text)) {
+          parsed[header.day].push({ start: toISO(start), end: toISO(end), title: event.text, room: roomItem?.text || "—" });
+        }
+      }
+    }
+    return parsed;
+  }
+
+  function hasClasses(schedule) {
+    return Object.values(schedule).some(day => day.length);
+  }
+
+  async function loadSchedule(file, statusEl) {
+    try {
+      statusEl.textContent = "Reading timetable…";
+      statusEl.className = "upload-status";
+
+      const pages = await extractPdfPages(file);
+      const text = pages.flat().map(x => x.text).join(" ");
+
+      const sequential = parseTimetableText(text);
+      const positioned = parsePositionedTimetable(pages);
+      const calendar = parseCalendarGrid(pages);
+      const result = hasClasses(sequential) ? sequential : hasClasses(positioned) ? positioned : calendar;
+
+      if (!hasClasses(result)) {
+        throw new Error("This PDF could not be read as a timetable. Try a text-based PDF (not a photo or scan).");
+      }
+      return result;
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.className = "upload-status error";
+      throw err;
+    }
+  }
+
+  /* ============================================================
+     Schedule tab: upload wiring
+     ============================================================ */
+  scheduleFile.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      activeSchedule = await loadSchedule(file, scheduleStatus);
+      scheduleStatus.textContent = `Loaded: ${file.name}`;
+      scheduleStatus.className = "upload-status";
+      renderSchedule();
+    } catch { /* status already shows the error */ }
+  };
+
+  /* ============================================================
+     Compare tab: preview, uploads, results
+     ============================================================ */
+  function renderPreview(el, schedule) {
+    el.innerHTML = DAYS.map(d => {
+      const classes = schedule[d] || [];
+      if (!classes.length) return "";
+      const items = classes.map(c =>
+        `<div class="preview-item"><span>${toPretty(c.start)}–${toPretty(c.end)}</span><span>${escapeHtml(c.title)}</span></div>`
+      ).join("");
+      return `<div class="preview-day">${d}</div>${items}`;
+    }).join("") || '<div class="preview-item">No classes found</div>';
+  }
+
+  previewAButton.onclick = () => {
+    renderPreview(previewA, scheduleA);
+    previewA.classList.toggle("open");
+    previewAButton.textContent = previewA.classList.contains("open") ? "Hide parsed classes" : "Show parsed classes";
+  };
+
+  previewBButton.onclick = () => {
+    renderPreview(previewB, scheduleB);
+    previewB.classList.toggle("open");
+    previewBButton.textContent = previewB.classList.contains("open") ? "Hide parsed classes" : "Show parsed classes";
+  };
+
+  fileA.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      scheduleA = await loadSchedule(file, statusA);
+      statusA.textContent = `Loaded: ${file.name}`;
+      statusA.className = "upload-status";
+      if (scheduleB) renderCompare();
+    } catch { /* status already shows the error */ }
+  };
+
+  fileB.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      scheduleB = await loadSchedule(file, statusB);
+      statusB.textContent = `Loaded: ${file.name}`;
+      statusB.className = "upload-status";
+      previewBButton.hidden = false;
+      compareResults.hidden = false;
+      comparePlaceholder.hidden = true;
+      downloadWrap.hidden = false;
+      renderCompare();
+    } catch { /* status already shows the error */ }
+  };
+
+  function commonFreeSlots(a, b) {
+    const result = [];
+    for (const x of freeSlots(a)) {
+      for (const y of freeSlots(b)) {
+        const s = Math.max(toMinutes(x.start), toMinutes(y.start));
+        const e = Math.min(toMinutes(x.end), toMinutes(y.end));
+        if (e - s >= MIN_FREE) result.push({ start: toISO(s), end: toISO(e) });
+      }
+    }
+    return result;
+  }
+
+  function renderCompare() {
+    renderDayTabs(compareDayTabs, compareDay, d => { compareDay = d; renderCompare(); });
+    compareDayLabel.textContent = compareDay.toUpperCase();
+
+    const slots = commonFreeSlots(scheduleA[compareDay] || [], scheduleB[compareDay] || []);
+    compareFreeTotal.textContent = `${durationLabel(totalDuration(slots))} common free time`;
+
+    compareRows.innerHTML = slots.length
+      ? slots.map(s => `
+          <div class="row free">
+            <div class="row-time">${toPretty(s.start)}–${toPretty(s.end)}</div>
+            <div><p class="row-title">Common free time</p></div>
+            <span class="pill">Free</span>
+          </div>`).join("")
+      : '<div class="empty-day">No common free time during the displayed hours.</div>';
+  }
+
+  /* ============================================================
+     PDF export (native browser print → Save as PDF)
+     ============================================================ */
+  function buildPrintArea() {
+    printDate.textContent = new Date().toLocaleDateString(undefined, {
+      weekday: "long", year: "numeric", month: "long", day: "numeric"
+    });
+
+    printBody.innerHTML = DAYS.map(day => {
+      const slots = commonFreeSlots(scheduleA[day] || [], scheduleB[day] || []);
+      const body = slots.length
+        ? `<div class="print-slots">${slots.map(s => `
+            <div class="print-slot-row">
+              <span class="print-time">${toPretty(s.start)} – ${toPretty(s.end)}</span>
+              <span class="print-dur">${durationLabel(toMinutes(s.end) - toMinutes(s.start))} free</span>
+            </div>`).join("")}</div>`
+        : '<p class="print-empty">No shared free time</p>';
+      return `<div class="print-day"><h2>${day}</h2>${body}</div>`;
+    }).join("");
+  }
+
+  downloadPdfBtn.onclick = () => {
+    if (!scheduleB) return;
+    buildPrintArea();
+    printOverlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  };
+  printNowBtn.onclick = () => window.print();
+  closePrintOverlay.onclick = () => {
+    printOverlay.classList.remove("open");
+    document.body.style.overflow = "";
+  };
+
+  /* ============================================================
+     View switch (Schedule / Compare)
+     ============================================================ */
+  document.querySelectorAll(".seg-btn").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".seg-btn").forEach(x => x.classList.toggle("active", x === btn));
+      viewSwitch.classList.toggle("compare-active", btn.dataset.view === "compare");
+      scheduleView.classList.toggle("active", btn.dataset.view === "schedule");
+      compareView.classList.toggle("active", btn.dataset.view === "compare");
+    };
+  });
+
+  renderSchedule();
+</script>
+</body>
+</html>
