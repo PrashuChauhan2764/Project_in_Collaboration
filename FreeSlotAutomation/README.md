@@ -37,8 +37,19 @@ This repo cotain the very first of our collaborative project.
 - added pdf download option without functioning
 - save button without functioning
 
-# Version7:
+# Version6.1:
 - reduce unecessary details below of the pdf, to make the pdf of 1 page only while download
+
+
+# Version6.2:
+- some color updates
+
+# Version7:
+--- but the code is messy html,css,js ----------
+- upload file option at centre in schedule section
+- added show parsed schedule in scheduleB also
+- color difference in light/dark orange in class
+- time start from 8am not 9am
 
 
 
