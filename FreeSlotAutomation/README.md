@@ -51,6 +51,12 @@ This repo cotain the very first of our collaborative project.
 - color difference in light/dark orange in class
 - time start from 8am not 9am
 
+# Version7.1:
+- schedule/compare text bold
+- show "class" instead of Busy text change it
+- show download pdf when both schedule uploaded and show it below the common free slots table at centre
+
+
 
 
 
