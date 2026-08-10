@@ -141,12 +141,26 @@
   <div class="rs-loading">loading logbook…</div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-firestore-compat.min.js"></script>
 <script>
 (function(){
   const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat'];
   const DEFAULT_SLOTS = ['8-9','9-10','10-11','11-12','12-1','1-2','2-3','3-4','4-5','5-6'];
-  const DATA_KEY = 'schedule-data';
-  const NAME_KEY = 'my-name';
+  const NAME_KEY = 'room-scout-my-name';
+
+  // --- Firebase setup ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyAE6zaqGuTKhdYpelH4nbuqA8QcVm57J88",
+    authDomain: "room-scouting.firebaseapp.com",
+    projectId: "room-scouting",
+    storageBucket: "room-scouting.firebasestorage.app",
+    messagingSenderId: "579478052331",
+    appId: "1:579478052331:web:e4752789200b9acd9c8dae"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const docRef = db.collection('scout').doc('shared');
 
   let state = {
     myName: null,
@@ -166,39 +180,38 @@
     return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
   }
 
-  async function loadAll(){
+  function loadAll(){
     try{
-      const nameRes = await window.storage.get(NAME_KEY, false);
-      state.myName = nameRes ? nameRes.value : null;
+      state.myName = localStorage.getItem(NAME_KEY) || null;
     }catch(e){ state.myName = null; }
 
-    try{
-      const dataRes = await window.storage.get(DATA_KEY, true);
-      if(dataRes && dataRes.value){
-        const parsed = JSON.parse(dataRes.value);
-        state.entries = parsed.entries || [];
-        state.customSlots = parsed.customSlots || [];
-      }
-    }catch(e){
-      state.entries = [];
-      state.customSlots = [];
-    }
-    state.loaded = true;
-    render();
+    // Live sync: updates instantly whenever anyone (you or a friend) changes data
+    docRef.onSnapshot(snap => {
+      const data = snap.exists ? snap.data() : {};
+      state.entries = data.entries || [];
+      state.customSlots = data.customSlots || [];
+      state.loaded = true;
+      render();
+    }, err => {
+      console.error('sync failed', err);
+      state.loaded = true;
+      render();
+      alert('Could not connect to the shared database. Check your internet connection.');
+    });
   }
 
   async function saveData(){
     try{
-      await window.storage.set(DATA_KEY, JSON.stringify({entries: state.entries, customSlots: state.customSlots}), true);
+      await docRef.set({entries: state.entries, customSlots: state.customSlots});
     }catch(e){
       console.error('save failed', e);
       alert('Could not save — check connection and try again.');
     }
   }
 
-  async function saveName(name){
+  function saveName(name){
     try{
-      await window.storage.set(NAME_KEY, name, false);
+      localStorage.setItem(NAME_KEY, name);
       state.myName = name;
       render();
     }catch(e){
@@ -222,13 +235,11 @@
       id: 'e' + Date.now() + Math.random().toString(36).slice(2,7),
       day: state.day, time: state.time, room, addedBy: state.myName, ts: Date.now()
     });
-    render();
     await saveData();
   }
 
   async function deleteEntry(id){
     state.entries = state.entries.filter(e => e.id !== id);
-    render();
     await saveData();
   }
 
@@ -239,7 +250,6 @@
     if(!v) return;
     if(!allSlots().includes(v)) state.customSlots.push(v);
     state.time = v;
-    render();
     await saveData();
   }
 
