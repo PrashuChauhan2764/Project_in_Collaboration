@@ -1,0 +1,395 @@
+<!-- Room Scout: shared free-classroom logbook -->
+<style>
+  :root{
+    --ink:#0E2A43;
+    --blueprint:#123B5E;
+    --blueprint-dark:#0B2A45;
+    --grid-line: rgba(255,255,255,0.08);
+    --paper:#F4F1E9;
+    --amber:#E8A93A;
+    --amber-dim:#C98F26;
+    --chalk:#EAF0F4;
+    --ok-green:#5FAF7A;
+    --danger:#D9614F;
+    --mono: 'IBM Plex Mono', 'Courier New', monospace;
+    --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+  }
+  @font-face { font-family:'IBM Plex Mono'; src: local('IBM Plex Mono'); }
+  *{box-sizing:border-box;}
+  .rs-root{
+    font-family: var(--sans);
+    background: var(--blueprint);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--chalk);
+    border-radius: 16px;
+    padding: 22px 20px 26px;
+    min-height: 560px;
+    position: relative;
+    overflow: hidden;
+  }
+  .rs-root::before{
+    content:"";
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.06), transparent 55%);
+    pointer-events:none;
+  }
+  .rs-header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:18px; flex-wrap:wrap; gap:8px;
+    border-bottom: 1px dashed rgba(234,240,244,0.25);
+    padding-bottom:12px;
+  }
+  .rs-title{
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    font-size: 20px;
+    font-weight:700;
+    color: var(--chalk);
+    display:flex; align-items:center; gap:10px;
+  }
+  .rs-title .stamp{
+    font-size:10px; font-weight:700; letter-spacing:1.5px;
+    border:1.5px solid var(--amber); color:var(--amber);
+    padding:2px 7px; border-radius:3px; transform: rotate(-3deg);
+  }
+  .rs-sub{ font-size:12px; color: rgba(234,240,244,0.55); font-family: var(--mono); }
+  .rs-who{ font-size:12px; color: var(--amber); font-family: var(--mono); }
+
+  .rs-name-gate{
+    background: rgba(0,0,0,0.25); border:1px dashed rgba(234,240,244,0.3);
+    border-radius:10px; padding:18px; max-width:420px; margin: 40px auto; text-align:center;
+  }
+  .rs-name-gate p{ font-size:13px; color: rgba(234,240,244,0.75); margin: 6px 0 14px; }
+  .rs-input{
+    background: var(--paper); color:var(--ink); border:none; border-radius:6px;
+    padding:9px 12px; font-family: var(--sans); font-size:14px; width:100%;
+  }
+  .rs-btn{
+    background: var(--amber); color: var(--blueprint-dark); border:none; border-radius:6px;
+    padding:9px 16px; font-family: var(--sans); font-weight:700; font-size:13px; cursor:pointer;
+    letter-spacing:0.3px;
+  }
+  .rs-btn:hover{ background: var(--amber-dim); }
+  .rs-btn.ghost{ background:transparent; border:1px solid rgba(234,240,244,0.35); color:var(--chalk); font-weight:600; }
+  .rs-btn.ghost:hover{ border-color: var(--amber); color: var(--amber); }
+  .rs-btn.small{ padding:6px 10px; font-size:12px; }
+  .rs-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  .rs-daystrip{ display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .rs-day{
+    font-family: var(--mono); font-size:12.5px; font-weight:600;
+    padding:8px 12px; border-radius:6px; cursor:pointer; user-select:none;
+    background: rgba(255,255,255,0.05); border:1px solid rgba(234,240,244,0.15); color: rgba(234,240,244,0.75);
+  }
+  .rs-day:hover{ border-color: rgba(234,240,244,0.4); }
+  .rs-day.active{ background: var(--amber); color: var(--blueprint-dark); border-color: var(--amber); }
+  .rs-day .cnt{ opacity:0.7; font-weight:400; margin-left:4px; }
+
+  .rs-timerow{ display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+  .rs-chip{
+    font-family: var(--mono); font-size:12px; padding:6px 10px; border-radius:14px; cursor:pointer;
+    background: rgba(255,255,255,0.04); border:1px solid rgba(234,240,244,0.15); color: rgba(234,240,244,0.7);
+  }
+  .rs-chip.active{ background: rgba(232,169,58,0.18); border-color: var(--amber); color: var(--amber); }
+  .rs-chip-add{
+    font-family: var(--mono); font-size:12px; padding:6px 10px; border-radius:14px;
+    background:transparent; border:1px dashed rgba(234,240,244,0.3); color: rgba(234,240,244,0.5); cursor:pointer;
+  }
+
+  .rs-panel{
+    background: rgba(244,241,233,0.06);
+    border:1px solid rgba(234,240,244,0.15);
+    border-radius: 12px; padding: 16px;
+  }
+  .rs-panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;}
+  .rs-panel-head h3{ margin:0; font-family: var(--mono); font-size:14px; color: var(--chalk); font-weight:700; }
+  .rs-panel-head .sel{ color:var(--amber); }
+
+  .rs-addrow{ display:flex; gap:8px; margin-bottom:14px; }
+  .rs-addrow input{ flex:1; }
+  .rs-addrow input.room{ font-family: var(--mono); font-size:16px; letter-spacing:1px; text-transform:uppercase; }
+
+  .rs-warn{ font-size:12px; color: var(--amber); margin: -6px 0 10px; font-family: var(--mono); }
+
+  .rs-rooms{ display:flex; flex-wrap:wrap; gap:8px; }
+  .rs-room-card{
+    background: var(--paper); color: var(--ink); border-radius:8px; padding:9px 12px;
+    display:flex; flex-direction:column; gap:2px; min-width:96px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    position:relative;
+  }
+  .rs-room-card .num{ font-family: var(--mono); font-weight:700; font-size:16px; }
+  .rs-room-card .meta{ font-size:10px; color:#5a5346; font-family: var(--mono); }
+  .rs-room-card button{
+    position:absolute; top:4px; right:5px; background:none; border:none; color:#a08e6b; cursor:pointer; font-size:12px;
+    line-height:1;
+  }
+  .rs-room-card button:hover{ color: var(--danger); }
+  .rs-empty{ font-size:13px; color: rgba(234,240,244,0.45); font-family: var(--mono); padding: 6px 0; }
+
+  .rs-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;}
+  .rs-stats{ font-family: var(--mono); font-size:12px; color: rgba(234,240,244,0.6); }
+  .rs-actions{ display:flex; gap:8px; }
+
+  .rs-loading{ text-align:center; padding: 60px 0; font-family: var(--mono); color: rgba(234,240,244,0.6); }
+</style>
+
+<div id="rs-app" class="rs-root">
+  <div class="rs-loading">loading logbook…</div>
+</div>
+
+<script>
+(function(){
+  const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat'];
+  const DEFAULT_SLOTS = ['8-9','9-10','10-11','11-12','12-1','1-2','2-3','3-4','4-5','5-6'];
+  const DATA_KEY = 'schedule-data';
+  const NAME_KEY = 'my-name';
+
+  let state = {
+    myName: null,
+    entries: [],       // {id, day, time, room, addedBy, ts}
+    customSlots: [],
+    day: 'Mon',
+    time: DEFAULT_SLOTS[0],
+    loaded: false
+  };
+
+  const root = document.getElementById('rs-app');
+
+  function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function allSlots(){ return DEFAULT_SLOTS.concat(state.customSlots.filter(s => !DEFAULT_SLOTS.includes(s))); }
+  function fmtTime(ts){
+    const d = new Date(ts);
+    return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+  }
+
+  async function loadAll(){
+    try{
+      const nameRes = await window.storage.get(NAME_KEY, false);
+      state.myName = nameRes ? nameRes.value : null;
+    }catch(e){ state.myName = null; }
+
+    try{
+      const dataRes = await window.storage.get(DATA_KEY, true);
+      if(dataRes && dataRes.value){
+        const parsed = JSON.parse(dataRes.value);
+        state.entries = parsed.entries || [];
+        state.customSlots = parsed.customSlots || [];
+      }
+    }catch(e){
+      state.entries = [];
+      state.customSlots = [];
+    }
+    state.loaded = true;
+    render();
+  }
+
+  async function saveData(){
+    try{
+      await window.storage.set(DATA_KEY, JSON.stringify({entries: state.entries, customSlots: state.customSlots}), true);
+    }catch(e){
+      console.error('save failed', e);
+      alert('Could not save — check connection and try again.');
+    }
+  }
+
+  async function saveName(name){
+    try{
+      await window.storage.set(NAME_KEY, name, false);
+      state.myName = name;
+      render();
+    }catch(e){
+      alert('Could not save your name, try again.');
+    }
+  }
+
+  function entriesFor(day, time){
+    return state.entries.filter(e => e.day === day && e.time === time);
+  }
+
+  async function addRoom(room){
+    room = room.trim().toUpperCase();
+    if(!room) return;
+    const dup = entriesFor(state.day, state.time).find(e => e.room.toUpperCase() === room);
+    if(dup){
+      const proceed = confirm(`${room} is already logged for ${state.day} ${state.time} by ${dup.addedBy}. Add again anyway?`);
+      if(!proceed) return;
+    }
+    state.entries.push({
+      id: 'e' + Date.now() + Math.random().toString(36).slice(2,7),
+      day: state.day, time: state.time, room, addedBy: state.myName, ts: Date.now()
+    });
+    render();
+    await saveData();
+  }
+
+  async function deleteEntry(id){
+    state.entries = state.entries.filter(e => e.id !== id);
+    render();
+    await saveData();
+  }
+
+  async function addCustomSlot(){
+    const val = prompt('Add a time slot (e.g. 3:30-4:30)');
+    if(!val) return;
+    const v = val.trim();
+    if(!v) return;
+    if(!allSlots().includes(v)) state.customSlots.push(v);
+    state.time = v;
+    render();
+    await saveData();
+  }
+
+  function loadJsPDF(cb){
+    if(window.jspdf){ cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload = cb;
+    s.onerror = () => alert('Could not load PDF library — check your connection.');
+    document.head.appendChild(s);
+  }
+
+  function exportPDF(){
+    loadJsPDF(() => {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont('courier','bold');
+      doc.setFontSize(16);
+      doc.text('Free Classroom Log', 14, 16);
+      doc.setFontSize(9);
+      doc.setFont('courier','normal');
+      doc.text('Generated ' + new Date().toLocaleString(), 14, 22);
+
+      let y = 32;
+      DAYS.forEach(day => {
+        const dayEntries = state.entries.filter(e => e.day === day);
+        if(dayEntries.length === 0) return;
+        if(y > 270){ doc.addPage(); y = 20; }
+        doc.setFont('courier','bold'); doc.setFontSize(12);
+        doc.text(day, 14, y); y += 6;
+        doc.setFont('courier','normal'); doc.setFontSize(10);
+
+        const byTime = {};
+        dayEntries.forEach(e => { (byTime[e.time] = byTime[e.time]||[]).push(e); });
+        Object.keys(byTime).forEach(time => {
+          if(y > 275){ doc.addPage(); y = 20; }
+          const rooms = byTime[time].map(e => e.room).join(', ');
+          const line = `  ${time}:  ${rooms}`;
+          const split = doc.splitTextToSize(line, 180);
+          doc.text(split, 14, y);
+          y += split.length * 5 + 2;
+        });
+        y += 4;
+      });
+
+      doc.save('free-classroom-log.pdf');
+    });
+  }
+
+  function render(){
+    if(!state.loaded){
+      root.innerHTML = '<div class="rs-loading">loading logbook…</div>';
+      return;
+    }
+    if(!state.myName){
+      root.innerHTML = `
+        <div class="rs-header">
+          <div class="rs-title">ROOM SCOUT <span class="stamp">FIELD LOG</span></div>
+        </div>
+        <div class="rs-name-gate">
+          <div style="font-family:var(--mono);font-size:14px;color:var(--amber);">who's logging?</div>
+          <p>One name per device — this is how the group knows who found what.</p>
+          <input class="rs-input" id="rs-name-input" placeholder="e.g. Aman" maxlength="24" />
+          <div style="height:10px;"></div>
+          <button class="rs-btn" id="rs-name-save">Start scouting</button>
+        </div>
+      `;
+      document.getElementById('rs-name-save').onclick = () => {
+        const v = document.getElementById('rs-name-input').value.trim();
+        if(!v){ alert('Enter a name so your team can tell entries apart.'); return; }
+        saveName(v);
+      };
+      document.getElementById('rs-name-input').addEventListener('keydown', e => {
+        if(e.key === 'Enter') document.getElementById('rs-name-save').click();
+      });
+      return;
+    }
+
+    const dayCounts = {};
+    DAYS.forEach(d => dayCounts[d] = state.entries.filter(e => e.day === d).length);
+    const slots = allSlots();
+    const current = entriesFor(state.day, state.time)
+      .slice()
+      .sort((a,b) => a.room.localeCompare(b.room, undefined, {numeric:true}));
+
+    root.innerHTML = `
+      <div class="rs-header">
+        <div>
+          <div class="rs-title">ROOM SCOUT <span class="stamp">FIELD LOG</span></div>
+          <div class="rs-sub">shared logbook &middot; ${state.entries.length} room${state.entries.length===1?'':'s'} logged so far</div>
+        </div>
+        <div class="rs-who">scouting as ${esc(state.myName)}</div>
+      </div>
+
+      <div class="rs-daystrip">
+        ${DAYS.map(d => `<div class="rs-day ${d===state.day?'active':''}" data-day="${d}">${d}<span class="cnt">${dayCounts[d]||''}</span></div>`).join('')}
+      </div>
+
+      <div class="rs-timerow">
+        ${slots.map(t => `<div class="rs-chip ${t===state.time?'active':''}" data-time="${esc(t)}">${esc(t)}</div>`).join('')}
+        <div class="rs-chip-add" id="rs-add-slot">+ custom time</div>
+      </div>
+
+      <div class="rs-panel">
+        <div class="rs-panel-head">
+          <h3><span class="sel">${state.day} · ${esc(state.time)}</span> — free rooms logged</h3>
+        </div>
+        <div class="rs-addrow">
+          <input class="rs-input room" id="rs-room-input" placeholder="Room no. e.g. 2104" maxlength="12" />
+          <button class="rs-btn" id="rs-room-add">Add</button>
+        </div>
+        <div class="rs-rooms" id="rs-rooms">
+          ${current.length ? current.map(e => `
+            <div class="rs-room-card">
+              <button data-id="${e.id}" title="Remove">✕</button>
+              <span class="num">${esc(e.room)}</span>
+              <span class="meta">${esc(e.addedBy)} · ${fmtTime(e.ts)}</span>
+            </div>
+          `).join('') : '<div class="rs-empty">Nothing logged yet for this slot — first one to spot a free room, add it.</div>'}
+        </div>
+      </div>
+
+      <div class="rs-footer">
+        <div class="rs-stats">${current.length} room${current.length===1?'':'s'} in this slot &middot; ${state.entries.length} total entries</div>
+        <div class="rs-actions">
+          <button class="rs-btn ghost small" id="rs-switch-name">Switch name</button>
+          <button class="rs-btn small" id="rs-export">Export PDF</button>
+        </div>
+      </div>
+    `;
+
+    root.querySelectorAll('.rs-day').forEach(el => el.onclick = () => { state.day = el.dataset.day; render(); });
+    root.querySelectorAll('.rs-chip[data-time]').forEach(el => el.onclick = () => { state.time = el.dataset.time; render(); });
+    document.getElementById('rs-add-slot').onclick = addCustomSlot;
+
+    const input = document.getElementById('rs-room-input');
+    document.getElementById('rs-room-add').onclick = () => { addRoom(input.value); input.value=''; input.focus(); };
+    input.addEventListener('keydown', e => { if(e.key === 'Enter'){ addRoom(input.value); input.value=''; } });
+
+    root.querySelectorAll('.rs-rooms button[data-id]').forEach(btn => {
+      btn.onclick = () => { if(confirm('Remove this entry?')) deleteEntry(btn.dataset.id); };
+    });
+
+    document.getElementById('rs-switch-name').onclick = () => {
+      const v = prompt('Enter your name:', state.myName || '');
+      if(v && v.trim()) saveName(v.trim());
+    };
+    document.getElementById('rs-export').onclick = exportPDF;
+  }
+
+  loadAll();
+})();
+</script>
