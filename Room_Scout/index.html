@@ -1,144 +1,255 @@
-<!-- Room Scout: shared free-classroom logbook version2 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0F3050" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="mobile-web-app-capable" content="yes" />
+<title>Room Scout — Field Log</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230F3050'/%3E%3Ctext x='50' y='68' font-size='58' text-anchor='middle' fill='%23E8A93A' font-family='monospace' font-weight='bold'%3ER%3C/text%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#0E2A43;
-    --blueprint:#123B5E;
-    --blueprint-dark:#0B2A45;
-    --grid-line: rgba(255,255,255,0.08);
+    --blueprint:#0F3050;
+    --blueprint-2:#123B5E;
+    --blueprint-dark:#081E33;
+    --grid-line: rgba(255,255,255,0.07);
     --paper:#F4F1E9;
     --amber:#E8A93A;
     --amber-dim:#C98F26;
+    --amber-glow: rgba(232,169,58,0.35);
     --chalk:#EAF0F4;
-    --ok-green:#5FAF7A;
-    --danger:#D9614F;
+    --chalk-dim: rgba(234,240,244,0.6);
+    --danger:#E17A63;
+    --display: 'Space Grotesk', var(--sans);
     --mono: 'IBM Plex Mono', 'Courier New', monospace;
     --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+    --radius: 14px;
   }
-  @font-face { font-family:'IBM Plex Mono'; src: local('IBM Plex Mono'); }
   *{box-sizing:border-box;}
-  .rs-root{
+  html,body{ margin:0; padding:0; }
+  body{
+    min-height:100vh;
     font-family: var(--sans);
-    background: var(--blueprint);
+    background: var(--blueprint-dark);
+    color: var(--chalk);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .rs-shell{
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -5%, rgba(255,255,255,0.09), transparent 60%),
+      linear-gradient(180deg, var(--blueprint) 0%, var(--blueprint-2) 55%, var(--blueprint-dark) 100%);
+    background-attachment: fixed;
+    position: relative;
+    display:flex;
+    justify-content:center;
+    padding: max(clamp(16px, 4vw, 48px), env(safe-area-inset-top)) max(clamp(14px, 4vw, 24px), env(safe-area-inset-right)) max(60px, calc(env(safe-area-inset-bottom) + 40px)) max(clamp(14px, 4vw, 24px), env(safe-area-inset-left));
+  }
+  .rs-shell::before{
+    content:"";
+    position:fixed; inset:0;
     background-image:
       linear-gradient(var(--grid-line) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 28px 28px;
-    color: var(--chalk);
-    border-radius: 16px;
-    padding: 22px 20px 26px;
-    min-height: 560px;
-    position: relative;
-    overflow: hidden;
-  }
-  .rs-root::before{
-    content:"";
-    position:absolute; inset:0;
-    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.06), transparent 55%);
+    background-size: 34px 34px;
     pointer-events:none;
+    mask-image: radial-gradient(ellipse 100% 70% at 50% 0%, black 40%, transparent 90%);
   }
+
+  .rs-root{
+    width:100%;
+    max-width: 720px;
+    position:relative;
+    z-index:1;
+  }
+
   .rs-header{
-    display:flex; align-items:baseline; justify-content:space-between;
-    margin-bottom:18px; flex-wrap:wrap; gap:8px;
-    border-bottom: 1px dashed rgba(234,240,244,0.25);
-    padding-bottom:12px;
+    display:flex; align-items:flex-start; justify-content:space-between;
+    margin-bottom: clamp(18px, 3vw, 26px); gap:12px; flex-wrap:wrap;
   }
   .rs-title{
-    font-family: var(--mono);
-    letter-spacing: 1px;
-    font-size: 20px;
+    font-family: var(--display);
+    letter-spacing: 0.5px;
+    font-size: clamp(22px, 4.5vw, 28px);
     font-weight:700;
     color: var(--chalk);
-    display:flex; align-items:center; gap:10px;
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    line-height:1.1;
   }
   .rs-title .stamp{
-    font-size:10px; font-weight:700; letter-spacing:1.5px;
+    font-family: var(--mono);
+    font-size:10.5px; font-weight:600; letter-spacing:1.5px;
     border:1.5px solid var(--amber); color:var(--amber);
-    padding:2px 7px; border-radius:3px; transform: rotate(-3deg);
+    padding:3px 8px; border-radius:4px; transform: rotate(-3deg);
+    white-space:nowrap;
   }
-  .rs-sub{ font-size:12px; color: rgba(234,240,244,0.55); font-family: var(--mono); }
-  .rs-who{ font-size:12px; color: var(--amber); font-family: var(--mono); }
+  .rs-sub{ font-size:12.5px; color: var(--chalk-dim); font-family: var(--mono); margin-top:5px; }
+  .rs-who{
+    font-size:12px; color: var(--amber); font-family: var(--mono);
+    background: rgba(232,169,58,0.1); border:1px solid rgba(232,169,58,0.3);
+    padding:6px 11px; border-radius:20px; white-space:nowrap; align-self:flex-start;
+  }
 
   .rs-name-gate{
-    background: rgba(0,0,0,0.25); border:1px dashed rgba(234,240,244,0.3);
-    border-radius:10px; padding:18px; max-width:420px; margin: 40px auto; text-align:center;
+    background: rgba(8,30,51,0.55);
+    backdrop-filter: blur(6px);
+    border:1px solid rgba(234,240,244,0.15);
+    border-radius: var(--radius); padding: clamp(22px,5vw,32px);
+    max-width:420px; margin: 8vh auto 0; text-align:center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   }
-  .rs-name-gate p{ font-size:13px; color: rgba(234,240,244,0.75); margin: 6px 0 14px; }
+  .rs-name-gate .eyebrow{
+    font-family: var(--mono); font-size:11px; letter-spacing:2px; color: var(--amber);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  .rs-name-gate h2{
+    font-family: var(--display); font-size:22px; margin: 0 0 10px; font-weight:700; color:var(--chalk);
+  }
+  .rs-name-gate p{ font-size:13.5px; color: var(--chalk-dim); margin: 0 0 20px; line-height:1.5; }
+
   .rs-input{
-    background: var(--paper); color:var(--ink); border:none; border-radius:6px;
-    padding:9px 12px; font-family: var(--sans); font-size:14px; width:100%;
+    background: var(--paper); color:var(--ink); border:2px solid transparent; border-radius:9px;
+    padding:13px 14px; font-family: var(--sans); font-size:16px; width:100%;
+    transition: border-color .15s ease;
+    -webkit-appearance:none; appearance:none;
   }
+  .rs-input:focus{ outline:none; border-color: var(--amber); }
+
   .rs-btn{
-    background: var(--amber); color: var(--blueprint-dark); border:none; border-radius:6px;
-    padding:9px 16px; font-family: var(--sans); font-weight:700; font-size:13px; cursor:pointer;
-    letter-spacing:0.3px;
+    background: var(--amber); color: var(--blueprint-dark); border:none; border-radius:9px;
+    padding:12px 20px; font-family: var(--sans); font-weight:700; font-size:14px; cursor:pointer;
+    letter-spacing:0.2px; transition: transform .1s ease, background .15s ease, box-shadow .15s ease;
+    box-shadow: 0 4px 14px rgba(232,169,58,0.25);
   }
   .rs-btn:hover{ background: var(--amber-dim); }
-  .rs-btn.ghost{ background:transparent; border:1px solid rgba(234,240,244,0.35); color:var(--chalk); font-weight:600; }
+  .rs-btn:active{ transform: scale(0.97); }
+  .rs-btn.ghost{ background:transparent; border:1.5px solid rgba(234,240,244,0.3); color:var(--chalk); font-weight:600; box-shadow:none; }
   .rs-btn.ghost:hover{ border-color: var(--amber); color: var(--amber); }
-  .rs-btn.small{ padding:6px 10px; font-size:12px; }
-  .rs-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .rs-btn.small{ padding:9px 14px; font-size:12.5px; }
+  .rs-btn.block{ width:100%; }
 
-  .rs-daystrip{ display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap; }
+  .rs-daystrip{
+    display:flex; gap:7px; margin-bottom:12px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .rs-daystrip::-webkit-scrollbar{ display:none; }
   .rs-day{
-    font-family: var(--mono); font-size:12.5px; font-weight:600;
-    padding:8px 12px; border-radius:6px; cursor:pointer; user-select:none;
-    background: rgba(255,255,255,0.05); border:1px solid rgba(234,240,244,0.15); color: rgba(234,240,244,0.75);
+    font-family: var(--mono); font-size:13px; font-weight:600;
+    padding:10px 14px; border-radius:9px; cursor:pointer; user-select:none;
+    background: rgba(255,255,255,0.045); border:1px solid rgba(234,240,244,0.14); color: rgba(234,240,244,0.72);
+    white-space:nowrap; flex-shrink:0;
+    transition: all .12s ease;
   }
   .rs-day:hover{ border-color: rgba(234,240,244,0.4); }
-  .rs-day.active{ background: var(--amber); color: var(--blueprint-dark); border-color: var(--amber); }
-  .rs-day .cnt{ opacity:0.7; font-weight:400; margin-left:4px; }
+  .rs-day.active{ background: var(--amber); color: var(--blueprint-dark); border-color: var(--amber); box-shadow: 0 4px 14px rgba(232,169,58,0.3); }
+  .rs-day .cnt{ opacity:0.75; font-weight:400; margin-left:5px; }
 
-  .rs-timerow{ display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
-  .rs-chip{
-    font-family: var(--mono); font-size:12px; padding:6px 10px; border-radius:14px; cursor:pointer;
-    background: rgba(255,255,255,0.04); border:1px solid rgba(234,240,244,0.15); color: rgba(234,240,244,0.7);
+  .rs-timerow{
+    display:flex; gap:7px; margin-bottom: clamp(16px, 3vw, 22px); flex-wrap:wrap; align-items:center;
   }
-  .rs-chip.active{ background: rgba(232,169,58,0.18); border-color: var(--amber); color: var(--amber); }
+  .rs-chip{
+    font-family: var(--mono); font-size:12.5px; padding:7px 13px; border-radius:16px; cursor:pointer;
+    background: rgba(255,255,255,0.035); border:1px solid rgba(234,240,244,0.14); color: rgba(234,240,244,0.68);
+    transition: all .12s ease;
+  }
+  .rs-chip.active{ background: rgba(232,169,58,0.16); border-color: var(--amber); color: var(--amber); }
   .rs-chip-add{
-    font-family: var(--mono); font-size:12px; padding:6px 10px; border-radius:14px;
+    font-family: var(--mono); font-size:12.5px; padding:7px 13px; border-radius:16px;
     background:transparent; border:1px dashed rgba(234,240,244,0.3); color: rgba(234,240,244,0.5); cursor:pointer;
   }
+  .rs-chip-add:hover{ border-color: var(--amber); color: var(--amber); }
 
   .rs-panel{
-    background: rgba(244,241,233,0.06);
-    border:1px solid rgba(234,240,244,0.15);
-    border-radius: 12px; padding: 16px;
+    background: rgba(244,241,233,0.05);
+    border:1px solid rgba(234,240,244,0.14);
+    border-radius: var(--radius); padding: clamp(16px, 4vw, 22px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
   }
-  .rs-panel-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;}
-  .rs-panel-head h3{ margin:0; font-family: var(--mono); font-size:14px; color: var(--chalk); font-weight:700; }
-  .rs-panel-head .sel{ color:var(--amber); }
+  .rs-panel-head{ margin-bottom:14px; }
+  .rs-panel-head h3{ margin:0; font-family: var(--mono); font-size:13.5px; color: var(--chalk-dim); font-weight:600; letter-spacing:0.3px; }
+  .rs-panel-head .sel{ color:var(--amber); font-weight:700; }
 
-  .rs-addrow{ display:flex; gap:8px; margin-bottom:14px; }
-  .rs-addrow input{ flex:1; }
-  .rs-addrow input.room{ font-family: var(--mono); font-size:16px; letter-spacing:1px; text-transform:uppercase; }
+  .rs-addrow{ display:flex; gap:8px; margin-bottom:16px; }
+  .rs-addrow input{ flex:1; min-width:0; }
+  .rs-addrow input.room{ font-family: var(--mono); font-size:17px; letter-spacing:1px; text-transform:uppercase; }
+  .rs-addrow .rs-btn{ flex-shrink:0; }
 
-  .rs-warn{ font-size:12px; color: var(--amber); margin: -6px 0 10px; font-family: var(--mono); }
-
-  .rs-rooms{ display:flex; flex-wrap:wrap; gap:8px; }
+  .rs-rooms{ display:flex; flex-wrap:wrap; gap:9px; }
   .rs-room-card{
-    background: var(--paper); color: var(--ink); border-radius:8px; padding:9px 12px;
-    display:flex; flex-direction:column; gap:2px; min-width:96px;
-    box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+    background: var(--paper); color: var(--ink); border-radius:10px; padding:10px 14px;
+    display:flex; flex-direction:column; gap:3px; min-width:100px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.12), 0 6px 16px rgba(0,0,0,0.15);
     position:relative;
   }
-  .rs-room-card .num{ font-family: var(--mono); font-weight:700; font-size:16px; }
+  .rs-room-card .num{ font-family: var(--mono); font-weight:700; font-size:17px; padding-right:14px; }
   .rs-room-card .meta{ font-size:10px; color:#5a5346; font-family: var(--mono); }
   .rs-room-card button{
-    position:absolute; top:4px; right:5px; background:none; border:none; color:#a08e6b; cursor:pointer; font-size:12px;
-    line-height:1;
+    position:absolute; top:6px; right:7px; background:none; border:none; color:#a08e6b; cursor:pointer; font-size:13px;
+    line-height:1; padding:2px;
   }
   .rs-room-card button:hover{ color: var(--danger); }
-  .rs-empty{ font-size:13px; color: rgba(234,240,244,0.45); font-family: var(--mono); padding: 6px 0; }
+  .rs-empty{
+    font-size:13px; color: var(--chalk-dim); font-family: var(--mono); padding: 18px 4px;
+    border:1px dashed rgba(234,240,244,0.2); border-radius:9px; text-align:center; width:100%;
+  }
 
-  .rs-footer{ display:flex; justify-content:space-between; align-items:center; margin-top:18px; flex-wrap:wrap; gap:10px;}
-  .rs-stats{ font-family: var(--mono); font-size:12px; color: rgba(234,240,244,0.6); }
-  .rs-actions{ display:flex; gap:8px; }
+  .rs-footer{
+    display:flex; justify-content:space-between; align-items:center; margin-top: clamp(16px,3vw,22px);
+    flex-wrap:wrap; gap:12px;
+  }
+  .rs-stats{ font-family: var(--mono); font-size:12px; color: var(--chalk-dim); }
+  .rs-actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
-  .rs-loading{ text-align:center; padding: 60px 0; font-family: var(--mono); color: rgba(234,240,244,0.6); }
+  .rs-loading{
+    text-align:center; padding: 30vh 0; font-family: var(--mono); color: var(--chalk-dim); font-size:14px;
+    letter-spacing:0.5px;
+  }
+
+  @media (max-width: 480px){
+    .rs-header{ flex-direction:column; }
+    .rs-who{ align-self:flex-start; }
+    .rs-addrow{ flex-wrap:wrap; }
+    .rs-addrow .rs-btn{ flex:1; }
+    .rs-footer{ flex-direction:column; align-items:stretch; }
+    .rs-actions{ justify-content:stretch; }
+    .rs-actions .rs-btn{ flex:1; }
+    .rs-room-card{ flex:1 1 calc(50% - 5px); min-width:0; }
+  }
+
+  @media (min-width: 720px){
+    .rs-name-gate{ margin-top: 12vh; }
+  }
+
+  @media (min-width: 860px){
+    .rs-root{ max-width: 780px; }
+    .rs-panel{ padding: 26px 28px; }
+    .rs-room-card{ min-width:112px; }
+    .rs-day{ padding:11px 16px; }
+    .rs-title{ font-size: 30px; }
+  }
+
+  @media (hover:hover){
+    .rs-room-card{ transition: transform .12s ease, box-shadow .12s ease; }
+    .rs-room-card:hover{ transform: translateY(-2px); box-shadow: 0 4px 4px rgba(0,0,0,0.14), 0 10px 22px rgba(0,0,0,0.2); }
+  }
 </style>
+</head>
+<body>
 
-<div id="rs-app" class="rs-root">
-  <div class="rs-loading">loading logbook…</div>
+<div class="rs-shell">
+  <div class="rs-root">
+    <div id="rs-app">
+      <div class="rs-loading">loading logbook…</div>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/12.16.0/firebase-app-compat.min.js"></script>
@@ -310,11 +421,12 @@
           <div class="rs-title">ROOM SCOUT <span class="stamp">FIELD LOG</span></div>
         </div>
         <div class="rs-name-gate">
-          <div style="font-family:var(--mono);font-size:14px;color:var(--amber);">who's logging?</div>
-          <p>One name per device — this is how the group knows who found what.</p>
+          <div class="eyebrow">who's logging?</div>
+          <h2>Add your name to start</h2>
+          <p>One name per device — this is how the group knows who found what, so nobody re-checks the same room twice.</p>
           <input class="rs-input" id="rs-name-input" placeholder="e.g. Aman" maxlength="24" />
-          <div style="height:10px;"></div>
-          <button class="rs-btn" id="rs-name-save">Start scouting</button>
+          <div style="height:12px;"></div>
+          <button class="rs-btn block" id="rs-name-save">Start scouting</button>
         </div>
       `;
       document.getElementById('rs-name-save').onclick = () => {
@@ -325,6 +437,7 @@
       document.getElementById('rs-name-input').addEventListener('keydown', e => {
         if(e.key === 'Enter') document.getElementById('rs-name-save').click();
       });
+      document.getElementById('rs-name-input').focus();
       return;
     }
 
@@ -403,3 +516,5 @@
   loadAll();
 })();
 </script>
+</body>
+</html>
