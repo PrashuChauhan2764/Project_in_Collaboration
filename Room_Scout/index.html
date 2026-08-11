@@ -173,9 +173,21 @@
     border-radius: var(--radius); padding: clamp(16px, 4vw, 22px);
     box-shadow: 0 20px 50px rgba(0,0,0,0.2);
   }
-  .rs-panel-head{ margin-bottom:14px; }
+  .rs-panel-head{ margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
   .rs-panel-head h3{ margin:0; font-family: var(--mono); font-size:13.5px; color: var(--chalk-dim); font-weight:600; letter-spacing:0.3px; }
   .rs-panel-head .sel{ color:var(--amber); font-weight:700; }
+
+  .rs-sort-btn{
+    font-family: var(--mono); font-size:12px; font-weight:700; letter-spacing:0.4px;
+    background: var(--blueprint-2); color: var(--amber); border:1.5px solid rgba(232,169,58,0.45);
+    padding:8px 13px; border-radius:9px; cursor:pointer; white-space:nowrap;
+    display:flex; align-items:center; gap:6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .rs-sort-btn:hover{ background: var(--blueprint); border-color: var(--amber); }
+  .rs-sort-btn:active{ transform: scale(0.97); }
+  .rs-sort-btn .arrow{ opacity:0.8; font-size:10px; }
 
   .rs-addrow{ display:flex; gap:8px; margin-bottom:16px; }
   .rs-addrow input{ flex:1; min-width:0; }
@@ -279,6 +291,7 @@
     customSlots: [],
     day: 'Mon',
     time: DEFAULT_SLOTS[0],
+    sortBy: 'block',    // 'block' | 'date' | 'name'
     loaded: false
   };
 
@@ -332,6 +345,48 @@
 
   function entriesFor(day, time){
     return state.entries.filter(e => e.day === day && e.time === time);
+  }
+
+  // Parses "4101" -> block 4, floor 1, room 01. Leading digit = block, next digit = floor,
+  // remaining digits = room number. Falls back gracefully for anything that doesn't fit.
+  function parseRoomKey(room){
+    const m = String(room).match(/^(\d)(\d)(\d+)/);
+    if(!m) return null;
+    return [parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10)];
+  }
+
+  const SORT_MODES = [
+    {key:'block', label:'Block & Floor'},
+    {key:'date',  label:'Newest First'},
+    {key:'name',  label:'By Name'}
+  ];
+
+  function sortEntries(list){
+    const arr = list.slice();
+    if(state.sortBy === 'block'){
+      arr.sort((a,b) => {
+        const ka = parseRoomKey(a.room), kb = parseRoomKey(b.room);
+        if(ka && kb){
+          if(ka[0]!==kb[0]) return ka[0]-kb[0];
+          if(ka[1]!==kb[1]) return ka[1]-kb[1];
+          return ka[2]-kb[2];
+        }
+        if(ka && !kb) return -1;
+        if(!ka && kb) return 1;
+        return a.room.localeCompare(b.room, undefined, {numeric:true});
+      });
+    } else if(state.sortBy === 'date'){
+      arr.sort((a,b) => b.ts - a.ts);
+    } else if(state.sortBy === 'name'){
+      arr.sort((a,b) => a.addedBy.localeCompare(b.addedBy) || a.room.localeCompare(b.room, undefined, {numeric:true}));
+    }
+    return arr;
+  }
+
+  function cycleSort(){
+    const idx = SORT_MODES.findIndex(m => m.key === state.sortBy);
+    state.sortBy = SORT_MODES[(idx+1) % SORT_MODES.length].key;
+    render();
   }
 
   async function addRoom(room){
@@ -444,9 +499,8 @@
     const dayCounts = {};
     DAYS.forEach(d => dayCounts[d] = state.entries.filter(e => e.day === d).length);
     const slots = allSlots();
-    const current = entriesFor(state.day, state.time)
-      .slice()
-      .sort((a,b) => a.room.localeCompare(b.room, undefined, {numeric:true}));
+    const current = sortEntries(entriesFor(state.day, state.time));
+    const sortLabel = SORT_MODES.find(m => m.key === state.sortBy).label;
 
     root.innerHTML = `
       <div class="rs-header">
@@ -469,6 +523,9 @@
       <div class="rs-panel">
         <div class="rs-panel-head">
           <h3><span class="sel">${state.day} · ${esc(state.time)}</span> — free rooms logged</h3>
+          <button class="rs-sort-btn" id="rs-sort-btn" title="Click to change sort order">
+            Sort: ${esc(sortLabel)} <span class="arrow">⟳</span>
+          </button>
         </div>
         <div class="rs-addrow">
           <input class="rs-input room" id="rs-room-input" placeholder="Room no. e.g. 2104" maxlength="12" />
@@ -497,6 +554,7 @@
     root.querySelectorAll('.rs-day').forEach(el => el.onclick = () => { state.day = el.dataset.day; render(); });
     root.querySelectorAll('.rs-chip[data-time]').forEach(el => el.onclick = () => { state.time = el.dataset.time; render(); });
     document.getElementById('rs-add-slot').onclick = addCustomSlot;
+    document.getElementById('rs-sort-btn').onclick = cycleSort;
 
     const input = document.getElementById('rs-room-input');
     document.getElementById('rs-room-add').onclick = () => { addRoom(input.value); input.value=''; input.focus(); };
