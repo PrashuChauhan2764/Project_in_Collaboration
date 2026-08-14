@@ -67,6 +67,21 @@ This repo cotain the very first of our collaborative project.
 * Prioritize rooms **close to the previous or next class** when showing results.
 * Make the room data easy to update without changing the HTML code.
 
+# version8.1:
+* Add a **“Sort By”** option when viewing free rooms.
+* Add dropdown options:
+
+  * **Block**
+  * **Nearby**
+* Sort rooms by **block number** when “Block” is selected.
+* Support **multi-digit block numbers (1–12)**.
+* Correctly interpret room numbers, e.g.:
+
+  * `4104` → Block 4, Floor 1, Room 04
+  * `10201` → Block 10, Floor 2, Room 01
+* When “Nearby” is selected, prioritize rooms close to the user’s **previous or next class**.
+
+
 
 
 
