@@ -82,6 +82,10 @@ This repo cotain the very first of our collaborative project.
 * When “Nearby” is selected, prioritize rooms close to the user’s **previous or next class**.
 
 
+# version8.1.1
+- sort by option update from white background to black and text with black
+
+
 
 
 
