@@ -173,6 +173,29 @@
     border-bottom: 1px solid var(--border);
   }
   .room-panel.open { display: block; }
+  .room-sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+  }
+  .room-sort-bar label {
+    color: var(--tertiary);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+  .room-sort-select {
+    background: var(--surface-strong);
+    color: var(--primary);
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .room-sort-select:focus { outline: none; border-color: var(--blue); }
   .room-note {
     margin: 10px 0 14px;
     padding: 10px 12px;
@@ -507,6 +530,7 @@
 
   let activeSchedule = cloneSchedule({});
   let currentDay = DAYS[0];
+  let roomSortMode = "nearby"; // "nearby" | "block"
   let scheduleA = SCHEDULE;
   let scheduleB = null;
   let compareDay = DAYS[0];
@@ -580,15 +604,27 @@
      Room availability
      ============================================================ */
 
-  /* Parses a room code like "4104" into block 4, floor 1, room 04.
-     Falls back gracefully for non-standard codes (e.g. "IT 201"). */
+  /* Parses a room code like "4104" (block 4, floor 1, room 04) or "10201"
+     (block 10, floor 2, room 01) — blocks can be 1-2 digits since this
+     college numbers blocks 1 through 12. Falls back gracefully for
+     non-standard codes (e.g. "IT 201"). */
   function parseRoomCode(code) {
     const raw = String(code).trim();
     const digits = raw.match(/\d+/);
     if (!digits) return { block: null, floor: null, num: null, raw };
 
     const numStr = digits[0];
-    if (numStr.length >= 4) {
+    if (numStr.length === 5) {
+      // 2-digit block (10-12) + 1-digit floor + 2-digit room
+      return {
+        block: parseInt(numStr.slice(0, 2), 10),
+        floor: parseInt(numStr[2], 10),
+        num: parseInt(numStr.slice(3), 10),
+        raw
+      };
+    }
+    if (numStr.length === 4) {
+      // 1-digit block (1-9) + 1-digit floor + 2-digit room
       return {
         block: parseInt(numStr[0], 10),
         floor: parseInt(numStr[1], 10),
@@ -666,6 +702,16 @@
     const dayData = ROOM_DATA[day] || {};
     const blocks = blocksInSlot(slot);
     const { prevRoom, nextRoom } = findAdjacentRooms(classes, slot);
+    const useNearby = roomSortMode === "nearby" && (prevRoom || nextRoom);
+
+    const sortBar = `
+      <div class="room-sort-bar">
+        <label for="room-sort-select">Sort by</label>
+        <select class="room-sort-select" id="room-sort-select">
+          <option value="nearby" ${roomSortMode === "nearby" ? "selected" : ""}>Nearby classes</option>
+          <option value="block" ${roomSortMode === "block" ? "selected" : ""}>Block &amp; floor</option>
+        </select>
+      </div>`;
 
     const rows = blocks.map(block => {
       const [blockStart, blockEnd] = block.split("-");
@@ -675,12 +721,12 @@
         return `
           <div class="room-block">
             <p class="room-block-name">${toPretty(blockStart)}–${toPretty(blockEnd)}</p>
-            <div class="room-seg occupied"><span>No rooms added yet</span></div>
+            <div class="room-seg occupied"><span>No rooms added for this hour yet</span></div>
           </div>`;
       }
 
       rooms.sort((a, b) => {
-        if (prevRoom || nextRoom) {
+        if (useNearby) {
           const distA = Math.min(prevRoom ? roomDistance(a, prevRoom) : Infinity, nextRoom ? roomDistance(a, nextRoom) : Infinity);
           const distB = Math.min(prevRoom ? roomDistance(b, prevRoom) : Infinity, nextRoom ? roomDistance(b, nextRoom) : Infinity);
           if (distA !== distB) return distA - distB;
@@ -689,10 +735,6 @@
       });
 
       const roomList = rooms.map(room => {
-        const parsed = parseRoomCode(room);
-        const locationHint = (parsed.block !== null && parsed.floor !== null)
-          ? ` <span style="color:var(--tertiary);font-weight:400;">· Block ${parsed.block}, Floor ${parsed.floor}</span>`
-          : "";
         return `<div class="room-seg free"><span>Room ${room}</span><strong>FREE</strong></div>`;
       }).join("");
 
@@ -703,11 +745,26 @@
         </div>`;
     }).join("");
 
-    const refNote = (prevRoom || nextRoom)
+    const refNote = useNearby
       ? `Rooms closest to your ${prevRoom ? `previous class (${prevRoom})` : ""}${prevRoom && nextRoom ? " or " : ""}${nextRoom ? `next class (${nextRoom})` : ""} are shown first, per hour.`
       : `Sorted by block and floor, per hour.`;
 
-    return `<div class="room-note">${refNote}</div>` + rows;
+    return sortBar + `<div class="room-note">${refNote}</div>` + rows;
+  }
+
+  function bindRoomSortSelects() {
+    document.querySelectorAll(".room-sort-select").forEach(sel => {
+      sel.onchange = () => {
+        roomSortMode = sel.value;
+        document.querySelectorAll(".room-panel[data-day]").forEach(panel => {
+          const panelDay = panel.dataset.day;
+          const panelSlot = { start: panel.dataset.start, end: panel.dataset.end };
+          const panelClasses = sortedClasses(activeSchedule[panelDay] || []);
+          panel.innerHTML = renderRoomPanel(panelDay, panelSlot, panelClasses);
+        });
+        bindRoomSortSelects();
+      };
+    });
   }
 
   /* ============================================================
@@ -760,11 +817,12 @@
             </div>
             <span class="pill">Free</span>
           </div>
-          <div class="room-panel" id="room-${i}">${renderRoomPanel(currentDay, s, classes)}</div>`;
+          <div class="room-panel" id="room-${i}" data-day="${currentDay}" data-start="${s.start}" data-end="${s.end}">${renderRoomPanel(currentDay, s, classes)}</div>`;
       }
     }
 
     rows.innerHTML = html;
+    bindRoomSortSelects();
     rows.querySelectorAll(".row.free").forEach(el => {
       el.onclick = () => document.getElementById("room-" + el.dataset.slot).classList.toggle("open");
     });
