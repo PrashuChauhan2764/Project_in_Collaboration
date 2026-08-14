@@ -56,6 +56,18 @@ This repo cotain the very first of our collaborative project.
 - show "class" instead of Busy text change it
 - show download pdf when both schedule uploaded and show it below the common free slots table at centre
 
+# Version8:
+
+* Replace fake room data with **real available rooms**.
+* Store room availability in a separate **JSON file** instead of `index.html`.
+* Allow adding **any number of rooms/classes** with their available time slots.
+* When a user uploads their schedule, detect their **free time slots**.
+* Show real available rooms according to those free slots.
+* Display rooms in **block-wise order** (e.g., `4102`, `4104`).
+* Prioritize rooms **close to the previous or next class** when showing results.
+* Make the room data easy to update without changing the HTML code.
+
+
 
 
 
