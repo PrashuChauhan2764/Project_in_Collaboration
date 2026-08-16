@@ -14,3 +14,9 @@
 
 # version4:
 - add __sort__ feature : sort by name,date,block,flor wise.
+
+# version5:
+- added manifest.js
+- added sw.js
+- added icons
+- added PWA
